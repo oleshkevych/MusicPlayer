@@ -12,6 +12,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+//        new DbConnector().fillerForDb(getApplicationContext());
         /*setExecuteTrigger(true);
         RefreshDb rDb = new RefreshDb();
         rDb.execute();*/
@@ -78,15 +82,7 @@ public class MainActivity extends AppCompatActivity {
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-//        String[] listOfMods = {"Folder", "Artist", "Album", "Folder(All Content)", "Playlist"};
-//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutForScrolling);
-//        for(String s: listOfMods){
-//            TextView text = new TextView(linearLayout.getContext());
-//            text.setText(s);
-//            text.setId(Arrays.asList(listOfMods).indexOf(listOfMods));
-//            text.setTextSize(getResources().getDimension(R.dimen.bigText));
-//            text.setPadding(100, 10, 100, 10);
-//        }
+//
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -170,11 +166,11 @@ public class MainActivity extends AppCompatActivity {
 //        mHideHandler.postDelayed(mHideRunnable, delayMillis);
 //    }
     private class RefreshDb extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            new DbConnector().fillerForDb(getApplicationContext());
-            return null;
-        }
+    @Override
+    protected Void doInBackground(Void... params) {
+        new DbConnector().fillerForDb(getApplicationContext());
+        return null;
+    }
 
     @Override
     protected void onPostExecute(Void aVoid) {
@@ -182,4 +178,52 @@ public class MainActivity extends AppCompatActivity {
         setExecuteTrigger(false);
     }
 }
+
+    @Override
+    public void onBackPressed() {
+        List<String> list;
+        if(ArtistsFragment.isCheckingTrigger()){
+            ArtistsFragment.setCheckingTrigger(false);
+            list = ArtistsFragment.getCheckedList();
+            for(String s: list) {
+                int i = Integer.parseInt(s);
+                View v = ArtistsFragment.getLinearLayout().findViewById(i);
+                v.setBackground(null);
+                v.setTag(null);
+            }
+            ArtistsFragment.setCheckedList(new ArrayList<String>());
+        }else if(AlbumsFragment.isCheckingTrigger()){
+            AlbumsFragment.setCheckingTrigger(false);
+            list = AlbumsFragment.getCheckedList();
+            for(String s: list) {
+                int i = Integer.parseInt(s);
+                View v = AlbumsFragment.getLinearLayout().findViewById(i);
+                v.setBackground(null);
+                v.setTag(null);
+            }
+            AlbumsFragment.setCheckedList(new ArrayList<String>());
+        }else if(FolderAllIncludeFragment.isCheckingTrigger()){
+            FolderAllIncludeFragment.setCheckingTrigger(false);
+            list = FolderAllIncludeFragment.getCheckedList();
+            for(String s: list) {
+                int i = Integer.parseInt(s);
+                View v = FolderAllIncludeFragment.getLinearLayout().findViewById(i);
+                v.setBackground(null);
+                v.setTag(null);
+            }
+            FolderAllIncludeFragment.setCheckedList(new ArrayList<String>());
+        }else if(FolderFragment.isCheckingTrigger()){
+            FolderFragment.setCheckingTrigger(false);
+            list = FolderFragment.getCheckedList();
+            for(String s: list) {
+                int i = Integer.parseInt(s);
+                View v = FolderFragment.getLinearLayout().findViewById(i);
+                v.setBackground(null);
+                v.setTag(null);
+            }
+            FolderFragment.setCheckedList(new ArrayList<String>());
+        }else {
+            super.onBackPressed();
+        }
+    }
 }

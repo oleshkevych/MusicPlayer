@@ -4,6 +4,8 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorWhite">#a6ffffff</color>
+    <color name="checkedBackground">#39ffffff</color>
+    <color name="checkedBorderColor">#994195fa</color>
 
     <color name="black_overlay">#66000000</color>
 </resources>
