@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.example.vov4ik.musicplayer.MainActivity">
+    <item
+        android:id="@+id/refreshFilesButton"
+        android:orderInCategory="100"
+        android:title="Refresh files"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/addSelected"
+        android:orderInCategory="100"
+        android:title="Add selected to playlist"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/showPlaylist"
+        android:orderInCategory="100"
+        android:title="Show Playlist"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/closePlayer"
+        android:orderInCategory="100"
+        android:title="Quit"
+        app:showAsAction="never"/>
+</menu>

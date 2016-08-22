@@ -1,19 +1,28 @@
 package com.example.vov4ik.musicplayer;
 
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.security.PublicKey;
 
 
 /**
@@ -25,33 +34,12 @@ public class MainActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
-    private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
     private static Boolean executeTrigger = false;
-//    private View mContentView;
-//    private final Runnable mHidePart2Runnable = new Runnable() {
-//        @SuppressLint("InlinedApi")
-//        @Override
-//        public void run() {
-//            // Delayed removal of status and navigation bar
-//
-//            // Note that some of these constants are new as of API 16 (Jelly Bean)
-//            // and API 19 (KitKat). It is safe to use them, as they are inlined
-//            // at compile-time and do nothing on earlier devices.
-//            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-//                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-//                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-//                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-//        }
-//    };
-//    private final Runnable mHideRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//            hide();
-//        }
-//    };
+    private ViewPager viewPager;
+    private PagerAdapter adapter;
+    final static String EXTRA_FOR_CLICKED_FILE = "extra for clicked file";
+    final static String EXTRA_FOR_PATHS = "extra for paths";
+
 
 
     public static Boolean getExecuteTrigger() {
@@ -67,40 +55,36 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-//        new DbConnector().fillerForDb(getApplicationContext());
-        /*setExecuteTrigger(true);
-        RefreshDb rDb = new RefreshDb();
-        rDb.execute();*/
-
-//        mContentView = findViewById(R.id.fullscreen_content);
-//        backGround
-//        try {
-//            while (true) {
-//                delayedHide(100);
-//                Thread.sleep(5 * 1000);
-//            }
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//
-
-
+        if(PlayService.getPlayer()==null) {
+            Intent intent = new Intent(this, PlayService.class);
+            startService(intent);
+            Intent intent1 = new Intent(this, AutoAudioStopper.class);
+            startService(intent1);
+            AudioManager am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            AutoAudioStopper.getInstance().setAudioManager(am);
+            AutoAudioStopper.getInstance().setContext(this);
+            ComponentName mReceiverComponent = new ComponentName(this,HeadphonesClickReceiver.class);
+            am.registerMediaButtonEventReceiver(mReceiverComponent);
+//            IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
+//            filter.setPriority(1000);
+//            HeadphonesClickReceiver r = new HeadphonesClickReceiver();
+//            am.registerMediaButtonEventReceiver();
+//            registerReceiver(r, filter);
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-    setSupportActionBar(toolbar);
-
-    String[] listOfMods = {"Album","Artist",  "Folder(All Content)", "Folder","Playlist"};
-
+        String[] listOfMods = {"Album","Artist",  "Folder(All Content)", "Folder","Playlist"};
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        for (String s: listOfMods){
-        tabLayout.addTab(tabLayout.newTab().setText(s));
-    }
+        for (String s: listOfMods) {
+            tabLayout.addTab(tabLayout.newTab().setText(s));
+        }
         tabLayout.setTabGravity(TabLayout.MODE_FIXED);
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
         tabLayout.setTabGravity(TabLayout.SCROLL_INDICATOR_RIGHT);
 
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        final PagerAdapter adapter = new PagerAdapter
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        adapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
@@ -120,51 +104,82 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        Button refreshButton = (Button) findViewById(R.id.refreshFilesButton);
-        assert refreshButton != null;
-        refreshButton.setOnClickListener(new View.OnClickListener() {
+
+
+
+
+        final Button playButton = (Button) findViewById(R.id.playButton);
+
+        assert playButton != null;
+        playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //First variant
-               /* while(getExecuteTrigger()){
-
-                }*/
-                if (!getExecuteTrigger()) {
-                    RefreshDb rDb = new RefreshDb();
-                    rDb.execute();
+                if(!PlayService.isPlayingNow()){
+                    PlayService.startPlaying();
                 }else{
-                    Context context = getApplicationContext();
-                    int duration = Toast.LENGTH_SHORT;
-                    CharSequence text = "Updating is running!";
-                    Toast toast = Toast.makeText(context, text, duration);
-                    toast.show();
+                    PlayService.pausePlaying();
                 }
+                buttonChanger();
             }
         });
+        Button nextButton = (Button) findViewById(R.id.nextButton);
+        assert nextButton != null;
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PlayService.nextSong();
+               buttonChanger();
+
+            }
+        });
+        final ImageButton previousButton = (ImageButton) findViewById(R.id.previousButton);
+        assert previousButton != null;
+        previousButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PlayService.previous();
+                buttonChanger();
+            }
+        });
+        if(!PlayService.isPlayingNow()) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            PlayService.playFile("START", getApplicationContext(), nm);
+        }
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        buttonChanger();
+    }
+
+    private void buttonChanger(){
+        if(PlayService.isPlayingNow()){
+            /*AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
+            manager.cancel(pendingIntent);
+            pendingIntent.cancel();*/
+            Button playButton = (Button) findViewById(R.id.playButton);
+            playButton.setBackground(getResources().getDrawable(R.drawable.pause_png));
+        }else{
+           /* AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
+
+            int interval = 900000;
+            manager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), interval, pendingIntent);*/
+            Button playButton = (Button) findViewById(R.id.playButton);
+            playButton.setBackground(getResources().getDrawable(R.drawable.play_button_png));
+
+        }
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-//        delayedHide(100);
     }
-
-//    private void hide() {
-//        // Hide UI first
-//        ActionBar actionBar = getSupportActionBar();
-//        if (actionBar != null) {
-//            actionBar.hide();
-//        }
-//        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
-//    }
-//    private void delayedHide(int delayMillis) {
-//        mHideHandler.removeCallbacks(mHideRunnable);
-//        mHideHandler.postDelayed(mHideRunnable, delayMillis);
-//    }
     private class RefreshDb extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... params) {
@@ -181,49 +196,105 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        List<String> list;
-        if(ArtistsFragment.isCheckingTrigger()){
-            ArtistsFragment.setCheckingTrigger(false);
-            list = ArtistsFragment.getCheckedList();
-            for(String s: list) {
-                int i = Integer.parseInt(s);
-                View v = ArtistsFragment.getLinearLayout().findViewById(i);
-                v.setBackground(null);
-                v.setTag(null);
-            }
-            ArtistsFragment.setCheckedList(new ArrayList<String>());
-        }else if(AlbumsFragment.isCheckingTrigger()){
-            AlbumsFragment.setCheckingTrigger(false);
-            list = AlbumsFragment.getCheckedList();
-            for(String s: list) {
-                int i = Integer.parseInt(s);
-                View v = AlbumsFragment.getLinearLayout().findViewById(i);
-                v.setBackground(null);
-                v.setTag(null);
-            }
-            AlbumsFragment.setCheckedList(new ArrayList<String>());
-        }else if(FolderAllIncludeFragment.isCheckingTrigger()){
-            FolderAllIncludeFragment.setCheckingTrigger(false);
-            list = FolderAllIncludeFragment.getCheckedList();
-            for(String s: list) {
-                int i = Integer.parseInt(s);
-                View v = FolderAllIncludeFragment.getLinearLayout().findViewById(i);
-                v.setBackground(null);
-                v.setTag(null);
-            }
-            FolderAllIncludeFragment.setCheckedList(new ArrayList<String>());
-        }else if(FolderFragment.isCheckingTrigger()){
-            FolderFragment.setCheckingTrigger(false);
-            list = FolderFragment.getCheckedList();
-            for(String s: list) {
-                int i = Integer.parseInt(s);
-                View v = FolderFragment.getLinearLayout().findViewById(i);
-                v.setBackground(null);
-                v.setTag(null);
-            }
-            FolderFragment.setCheckedList(new ArrayList<String>());
-        }else {
+        ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
+        if (ff.isCheckingTrigger()){
+            ff.unselectMusicItems();
+        }else if(ff.isFolderTrigger()) {
+            ff.show(ff.getPreviousList());
+            ff.setFolderTrigger(false);
+        }else{
+//            stopService(new Intent(this, PlayService.class));
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.refreshFilesButton) {
+            if (!getExecuteTrigger()) {
+                setExecuteTrigger(true);
+                RefreshDb rDb = new RefreshDb();
+                rDb.execute();
+            }else{
+                Context context = getApplicationContext();
+                int duration = Toast.LENGTH_SHORT;
+                CharSequence text = "Updating is running!";
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+            }
+        }
+        if (id == R.id.addSelected) {
+            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
+            if (ff.getSelectedPaths().size()>0) {
+                Intent intent = new Intent(this, PlayerActivity.class);
+                intent.putExtra(EXTRA_FOR_PATHS, ff.getSelectedPaths().toArray(new String[ff.getSelectedPaths().size()]));
+                intent.putExtra(EXTRA_FOR_CLICKED_FILE, "ADD");
+                startActivity(intent);
+                ff.unselectMusicItems();
+            }else{
+                Context context = getApplicationContext();
+                int duration = Toast.LENGTH_SHORT;
+                CharSequence text = "Make shore, that you have selected some thing! ";
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+            }
+        }
+        if (id == R.id.showPlaylist) {
+            Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
+            startActivity(intent);
+        }
+        if (id == R.id.closePlayer) {
+            AlarmManager manager;
+            PendingIntent pendingIntent;
+            manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+            pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
+            int interval = 180000;
+            manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
+            PlayService.pausePlaying();
+            Intent intent = new Intent(getApplicationContext(), PlayService.class);
+            stopService(intent);
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+//    public boolean isMyServiceRunning(Class<?> serviceClass) {
+//        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+//            if (serviceClass.getName().equals(service.service.getClassName())) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+
+
+    @Override
+    protected void onDestroy() {
+        AlarmManager manager;
+        PendingIntent pendingIntent;
+        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+
+//      START NotificationClass.sendNotification();
+        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
+        int interval = 180000;
+        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
+        super.onDestroy();
     }
 }

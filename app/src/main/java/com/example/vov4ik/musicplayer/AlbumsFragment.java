@@ -1,22 +1,15 @@
 package com.example.vov4ik.musicplayer;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class AlbumsFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
-
+public class AlbumsFragment extends MusicListFragment implements View.OnClickListener, View.OnLongClickListener {
+/*
     final static String EXTRA_FOR_FILES = "extra for files";
     final static String EXTRA_FOR_PATHS = "extra for paths";
     private  View rootView;
@@ -29,6 +22,7 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
     private static List<String> checkedList = new ArrayList<>();
     private static boolean checkingTrigger = false;
     private static LinearLayout linearLayout;
+    private static List<String> selectedPaths = new ArrayList<>();
 
     public static boolean isCheckingTrigger() {
         return checkingTrigger;
@@ -54,10 +48,36 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
         AlbumsFragment.linearLayout = linearLayout;
     }
 
-    public AlbumsFragment() {
-        // Required empty public constructor
+    public static List<String> getSelectedPaths() {
+        return selectedPaths;
     }
 
+    public static void setSelectedPaths(String selectedPaths) {
+        AlbumsFragment.selectedPaths.add(selectedPaths);
+    }
+
+    public static void setNewSelectedPaths(List<String> selectedPaths) {
+        AlbumsFragment.selectedPaths = selectedPaths;
+    }
+    public static void removeSelectedPaths(String selectedPaths) {
+        AlbumsFragment.selectedPaths.remove(selectedPaths);
+    }
+
+*/
+private static MusicItemsList musicItemsList;
+
+    protected MusicItemsList getMusicItemsList()
+    {
+        return musicItemsList;
+    }
+
+    public AlbumsFragment()
+    {
+        if (musicItemsList == null)
+        {
+            musicItemsList = new MusicItemsList();
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,18 +88,16 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        rootView = inflater.inflate(R.layout.fragment_albums, container, false);
-        setCheckingTrigger(false);
-        albumsName = DbConnector.getAlbumFromDb(getContext());
-        path = DbConnector.getAlbumPathsFromDb(getContext());
-        filesName = DbConnector.getAlbumNamesFromDb(getContext());
-
-        if(rootView!=null) {
-            showFolders(albumsName);
-        }
-        return rootView;
+        getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_albums, container, false));
+        getMusicItemsList().setLinearLayout((LinearLayout) getMusicItemsList().getRootView().findViewById(R.id.layoutAlbum));
+        getMusicItemsList().setCheckingTrigger(false);
+        getMusicItemsList().setFolderName(DbConnector.getAlbumFromDb(getContext()));
+        getMusicItemsList().setPath(DbConnector.getAlbumPathsFromDb(getContext()));
+        getMusicItemsList().setMusicFiles(DbConnector.getAlbumNamesFromDb(getContext()));
+        show(getMusicItemsList().getFolderName());
+        return getMusicItemsList().getRootView();
     }
-
+/*
 
     @Override
     public void onAttach(Context context) {
@@ -87,7 +105,8 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
 
     }
     private void showFolders(List<String> list){
-        setLinearLayout((LinearLayout) rootView.findViewById(R.id.layoutAlbum));
+        getMusicItemsList().setLinearLayout((LinearLayout) rootView.findViewById(R.id.layoutAlbum));
+        linearLayout = getMusicItemsList().getLinearLayout(); // TODO: Refactor this
         linearLayout.removeAllViews();
         for (String s : list) {
             TextView text = new TextView(linearLayout.getContext());
@@ -105,7 +124,7 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
 
     @Override
     public void onClick(View v) {
-        if (!checkingTrigger) {
+        if (!getMusicItemsList().isCheckingTrigger()) {
             if ((!albumTrigger)) {
                 numberOfAlbum = v.getId();
                 showFolders(Arrays.asList(filesName.get(v.getId())));
@@ -123,15 +142,30 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
             if ((v.getTag()!=null)&&(v.getTag().equals("checked"))){
                 v.setBackground(null);
                 v.setTag(null);
-                List<String> l = getCheckedList();
+                List<String> l = getMusicItemsList().getCheckedList();
                 l.remove(String.valueOf(v.getId()));
-                setCheckedList(l);
+                getMusicItemsList().setCheckedList(l);
+                if ((!albumTrigger)) {
+                    for (int i = 1; i< path.get(v.getId()).length; i++) {
+                        getMusicItemsList().removeSelectedPaths(path.get(v.getId())[i]);
+                    }
+                } else if (v.getId() != 0) {
+                    getMusicItemsList().removeSelectedPaths(path.get(numberOfAlbum)[v.getId()]);
+                }
             } else {
                 v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
-                List<String> l = getCheckedList();
+                List<String> l = getMusicItemsList().getCheckedList();
                 l.add(String.valueOf(v.getId()));
                 v.setTag("checked");
-                setCheckedList(l);
+                getMusicItemsList().setCheckedList(l);
+                if ((!albumTrigger)) {
+                    for (int i = 1; i< path.get(v.getId()).length; i++) {
+                        getMusicItemsList().setSelectedPaths(path.get(v.getId())[i]);
+                    }
+                } else if (v.getId() != 0) {
+                    getMusicItemsList().setSelectedPaths(path.get(numberOfAlbum)[v.getId()]);
+                }
+
             }
         }
     }
@@ -139,26 +173,32 @@ public class AlbumsFragment extends Fragment implements View.OnClickListener, Vi
     @Override
     public boolean onLongClick(View v) {
         if(!((v.getId()==0)&&(albumTrigger))) {
-            setCheckingTrigger(true);
+            getMusicItemsList().setCheckingTrigger(true);
             v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
             v.setTag("checked");
-            List<String> l = getCheckedList();
+            List<String> l = getMusicItemsList().getCheckedList();
             l.add(String.valueOf(v.getId()));
-            setCheckedList(l);
+            getMusicItemsList().setCheckedList(l);
+            if ((!albumTrigger)) {
+                for (int i = 1; i< path.get(v.getId()).length; i++) {
+                    getMusicItemsList().setSelectedPaths(path.get(v.getId())[i]);
+                }
+            } else if (v.getId() != 0) {
+                getMusicItemsList().setSelectedPaths(path.get(numberOfAlbum)[v.getId()]);
+            }
         }
         return true;
     }
-
+*/
     @Override
     public void setMenuVisibility(boolean menuVisible) {
         super.setMenuVisibility(menuVisible);
-        Log.d("Test", menuVisible+" Album");
-        if((!menuVisible)&&(rootView!=null)){
-            setCheckingTrigger(false);
-            if(albumTrigger){
-                showFolders(Arrays.asList(filesName.get(numberOfAlbum)));
-            }else{
-                showFolders(albumsName);
+        if((!menuVisible)&&(getMusicItemsList().getRootView()!=null)){
+            getMusicItemsList().setCheckingTrigger(false);
+            if(getMusicItemsList().isFolderTrigger()) {
+                show(Arrays.asList(getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
+            }else {
+                show(getMusicItemsList().getFolderName());
             }
         }
     }

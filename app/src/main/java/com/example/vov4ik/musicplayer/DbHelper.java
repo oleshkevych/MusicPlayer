@@ -53,6 +53,14 @@ public class DbHelper extends SQLiteOpenHelper {
             COLUMN_FILE_NAME + " TEXT, " + COLUMN_PATH +  " TEXT, "+ COLUMN_ID_FOLDER + " INTEGER, "+ COLUMN_ID_ALBUM + " INTEGER, " +
             COLUMN_ID_ARTIST + " INTEGER, "+ COLUMN_ID_MAIN_FOLDER + " INTEGER"+ ");";
 
+    final static String TABLE_PLAY_SERVICE = "play_service";
+    final static String COLUMN_NAME_ID_PLAY_SERVICE = "ID_play_service";
+    final static String COLUMN_PATH_PLAY_SERVICE = "path_for_play_service";
+    final static String COLUMN_PLAYED_TIME = "last_played_time_for_play_service";
+    final static String CREATE_TABLE_PLAY_SERVICE = "CREATE TABLE IF NOT EXISTS "+TABLE_PLAY_SERVICE+" (" +
+            COLUMN_NAME_ID_PLAY_SERVICE + " INTEGER PRIMARY KEY, "+  COLUMN_PATH_PLAY_SERVICE + " TEXT, " +
+            COLUMN_PLAYED_TIME + " INTEGER);";
+
 
     private Context mContext;
     private SQLiteDatabase mDatabase;
@@ -72,6 +80,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ALBUM);
         db.execSQL(CREATE_TABLE_ARTIST);
         db.execSQL(CREATE_TABLE_MAIN_FOLDER);
+        db.execSQL(CREATE_TABLE_PLAY_SERVICE);
 
     }
 
@@ -86,6 +95,7 @@ public class DbHelper extends SQLiteOpenHelper {
         mDatabase.execSQL(CREATE_TABLE_ALBUM);
         mDatabase.execSQL(CREATE_TABLE_ARTIST);
         mDatabase.execSQL(CREATE_TABLE_MAIN_FOLDER);
+        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
         return this;
     }
 
@@ -452,5 +462,52 @@ public class DbHelper extends SQLiteOpenHelper {
         mDatabase.close();
         return path;
     }
+
+    //Working with DB for Service
+
+    public List<String> getLastPlayList() {
+        open();
+        List<String> list = new ArrayList<>();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        cursor.moveToFirst();
+        do{
+            list.add(cursor.getString(1));
+        }while(cursor.moveToNext());
+        cursor.close();
+        mDatabase.close();
+        return list;
+    }
+
+    public int getLastPlayedTime(){
+        open();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        cursor.moveToFirst();
+        int lastTime = cursor.getInt(2);
+        cursor.close();
+        mDatabase.close();
+        return lastTime;
+    }
+
+    public void setLastPlayListAndTime(List<String> list, int time){
+        open();
+        mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
+        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE);
+        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
+        for (int i = 0; i<list.size(); i++){
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_PATH_PLAY_SERVICE, list.get(i));
+            if(i==0){
+                values.put(COLUMN_PLAYED_TIME, time);
+            }else{
+                values.put(COLUMN_PLAYED_TIME, 0);
+            }
+            mDatabase.insert(
+                    DbHelper.TABLE_PLAY_SERVICE,
+                    null,
+                    values);
+        }
+        mDatabase.close();
+    }
+
 
 }

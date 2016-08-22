@@ -301,6 +301,15 @@ public class DbConnector {
     public static void deleteDb(Context context){
         new DbHelper(context).delete();
     }
+    public static List<String> getLastPlayList(Context context){
+        return new DbHelper(context).getLastPlayList();
+    }
+    public static int getLastPlayTime(Context context){
+        return new DbHelper(context).getLastPlayedTime();
+    }
+    public static void setLastPlayListAndTime(Context context, List<String> list, int time){
+        new DbHelper(context).setLastPlayListAndTime(list, time);
+    }
 
 }
 ///////////////////////////////////For simple file manager

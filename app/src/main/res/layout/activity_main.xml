@@ -14,10 +14,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:background="?attr/colorPrimary"
             android:elevation="6dp"
             android:minHeight="?attr/actionBarSize"
@@ -27,12 +33,14 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"/>
 
+        </android.support.design.widget.AppBarLayout>
+
         <android.support.design.widget.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/toolbar"
-            android:background="?attr/colorPrimary"
+            android:layout_below="@+id/appBar"
+            android:background="#a901c355"
             android:elevation="6dp"
             android:minHeight="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
@@ -55,33 +63,72 @@
         android:layout_height="90dp"
         android:fitsSystemWindows="true"
         android:layout_gravity="bottom"
-        android:background="@color/black_overlay"
-        >
+        android:background="@color/black_overlay">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            android:background="@color/colorWhite">
+
+
+        </LinearLayout>
         <LinearLayout
             android:id="@+id/playMenu"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom"
             android:orientation="horizontal"
-            tools:ignore="UselessParent">
+            tools:ignore="UselessParent"
+            android:padding="5dp">
 
-            <Button
-                style="?android:attr/buttonStyleSmall"
+            <LinearLayout
+                android:layout_height="40dp"
+                android:layout_weight="1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Refresh Files"
-                android:id="@+id/refreshFilesButton"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textSize="20sp"
-                android:text="PlayBar"/>
-
+                android:gravity="center"
+                android:layout_gravity="center">
+                <ImageButton
+                    android:id="@+id/previousButton"
+                    android:layout_width="60dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/previous_png"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <Button
+                    android:id="@+id/playButton"
+                    android:layout_width="60dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/play_button_png"/>
+            </LinearLayout>
+                <!--<Button-->
+                    <!--android:id="@+id/pauseButton"-->
+                    <!--android:layout_width="0dp"-->
+                    <!--android:layout_weight="1"-->
+                    <!--android:layout_height="match_parent"-->
+                    <!--android:textSize="15sp"-->
+                    <!--android:background="@drawable/pause_png"/>-->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <Button
+                    android:id="@+id/nextButton"
+                    android:layout_width="60dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/next_png"/>
+            </LinearLayout>
 
         </LinearLayout>
     </FrameLayout>

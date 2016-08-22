@@ -1,22 +1,18 @@
 package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
-public class FolderAllIncludeFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
+public class FolderAllIncludeFragment extends MusicListFragment implements View.OnClickListener, View.OnLongClickListener {
 
     private  View rootView;
     private boolean folderTrigger = false;
@@ -30,7 +26,8 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
     private static List<String> checkedList = new ArrayList<>();
     private static boolean checkingTrigger = false;
     private static LinearLayout linearLayout;
-
+    private static List<String> selectedPaths = new ArrayList<>();
+/*
     public static boolean isCheckingTrigger() {
         return checkingTrigger;
     }
@@ -55,9 +52,37 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
         FolderAllIncludeFragment.linearLayout = linearLayout;
     }
 
-    public FolderAllIncludeFragment() {
-
+    public static List<String> getSelectedPaths() {
+        return selectedPaths;
     }
+
+    public static void setSelectedPaths(String selectedPaths) {
+        FolderAllIncludeFragment.selectedPaths.add(selectedPaths);
+    }
+
+    public static void setNewSelectedPaths(List<String> selectedPaths) {
+        FolderAllIncludeFragment.selectedPaths = selectedPaths;
+    }
+    public static void removeSelectedPaths(String selectedPaths) {
+        FolderAllIncludeFragment.selectedPaths.remove(selectedPaths);
+    }
+    */
+    
+    private static MusicItemsList musicItemsList;
+
+    protected MusicItemsList getMusicItemsList()
+    {
+        return musicItemsList;
+    }
+
+    public FolderAllIncludeFragment()
+    {
+        if (musicItemsList == null)
+        {
+            musicItemsList = new MusicItemsList();
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,11 +93,12 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        rootView = inflater.inflate(R.layout.fragment_folder_all_include, container, false);
-        setCheckingTrigger(false);
-        pathForMainFolders = DbConnector.getMainFoldersPathsFromDb(getContext());
-        mainFolders = DbConnector.getMainFoldersFromDb(getContext());
-        musicFilesInMainFolders = DbConnector.getMainFoldersNamesFromDb(getContext());
+        getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_folder_all_include, container, false));
+        getMusicItemsList().setLinearLayout((LinearLayout) getMusicItemsList().getRootView().findViewById(R.id.layoutFolderAllInclude));
+        getMusicItemsList().setCheckingTrigger(false);
+        getMusicItemsList().setPath(DbConnector.getMainFoldersPathsFromDb(getContext()));
+        getMusicItemsList().setFolderName(DbConnector.getMainFoldersFromDb(getContext()));
+        getMusicItemsList().setMusicFiles(DbConnector.getMainFoldersNamesFromDb(getContext()));
 //        for(File f: parentFileForAll.listFiles()){
 //            mainPath.add(f.getPath());
 //        }
@@ -90,10 +116,8 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
 //                }
 //            }
 //        }
-        if(rootView!=null) {
-            show(mainFolders);
-        }
-        return rootView;
+        show(getMusicItemsList().getFolderName());
+        return getMusicItemsList().getRootView();
     }
 
 //    private void getParent(String s){
@@ -163,10 +187,10 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
         super.onDetach();
 
     }
-
+/*
     @Override
     public void onClick(View v) {
-        if (!checkingTrigger) {
+        if (!getMusicItemsList().isCheckingTrigger()) {
             if ((!folderTrigger)) {
                 numberOfFolder = v.getId();
                 show(Arrays.asList(musicFilesInMainFolders.get(v.getId())));
@@ -184,21 +208,37 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
             if ((v.getTag()!=null)&&(v.getTag().equals("checked"))){
                 v.setBackground(null);
                 v.setTag(null);
-                List<String> l = getCheckedList();
+                List<String> l = getMusicItemsList().getCheckedList();
                 l.remove(String.valueOf(v.getId()));
-                setCheckedList(l);
+                getMusicItemsList().setCheckedList(l);
+                if ((!folderTrigger)) {
+                    for (int i = 1; i< pathForMainFolders.get(v.getId()).length; i++) {
+                        getMusicItemsList().removeSelectedPaths(pathForMainFolders.get(v.getId())[i]);
+                    }
+                } else if (v.getId() != 0) {
+                    getMusicItemsList().removeSelectedPaths(pathForMainFolders.get(numberOfFolder)[v.getId()]);
+                }
             } else {
                 v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
-                List<String> l = getCheckedList();
+                List<String> l = getMusicItemsList().getCheckedList();
                 l.add(String.valueOf(v.getId()));
                 v.setTag("checked");
-                setCheckedList(l);
+                getMusicItemsList().setCheckedList(l);
+                if ((!folderTrigger)) {
+                    for (int i = 1; i< pathForMainFolders.get(v.getId()).length; i++) {
+                        getMusicItemsList().setSelectedPaths(pathForMainFolders.get(v.getId())[i]);
+                    }
+                } else if (v.getId() != 0) {
+                    getMusicItemsList().setSelectedPaths(pathForMainFolders.get(numberOfFolder)[v.getId()]);
+                }
+
 
             }
         }
     }
     private void show(List<String> list){
-        setLinearLayout((LinearLayout) rootView.findViewById(R.id.layoutFolderAllInclude));
+        getMusicItemsList().setLinearLayout((LinearLayout) rootView.findViewById(R.id.layoutFolderAllInclude));
+        linearLayout = getMusicItemsList().getLinearLayout(); // TODO: Refactor this
         linearLayout.removeAllViews();
         for (String s : list) {
             TextView text = new TextView(linearLayout.getContext());
@@ -215,27 +255,34 @@ public class FolderAllIncludeFragment extends Fragment implements View.OnClickLi
     }
     @Override
     public boolean onLongClick(View v) {
-        if(!((v.getId()!=0)&&(folderTrigger))) {
-            setCheckingTrigger(true);
+        if(!((v.getId()==0)&&(folderTrigger))) {
+            getMusicItemsList().setCheckingTrigger(true);
             v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
             v.setTag("checked");
-            List<String> l = getCheckedList();
+            List<String> l = getMusicItemsList().getCheckedList();
             l.add(String.valueOf(v.getId()));
-            setCheckedList(l);
+            getMusicItemsList().setCheckedList(l);
+            if ((!folderTrigger)) {
+                for (int i = 1; i< pathForMainFolders.get(v.getId()).length; i++) {
+                    getMusicItemsList().setSelectedPaths(pathForMainFolders.get(v.getId())[i]);
+                }
+            } else if (v.getId() != 0) {
+                getMusicItemsList().setSelectedPaths(pathForMainFolders.get(numberOfFolder)[v.getId()]);
+            }
         }
 
         return true;
     }
+    */
     @Override
     public void setMenuVisibility(boolean menuVisible) {
         super.setMenuVisibility(menuVisible);
-        Log.d("Test", menuVisible + " FolderAllInclude");
-        if((!menuVisible)&&(rootView!=null)){
-            setCheckingTrigger(false);
-            if(folderTrigger){
-                show(Arrays.asList(musicFilesInMainFolders.get(numberOfFolder)));
-            }else{
-                show(mainFolders);
+        if((!menuVisible)&&(getMusicItemsList().getRootView()!=null)){
+            getMusicItemsList().setCheckingTrigger(false);
+            if(getMusicItemsList().isFolderTrigger()) {
+                show(Arrays.asList(getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
+            }else {
+                show(getMusicItemsList().getFolderName());
             }
         }
     }
