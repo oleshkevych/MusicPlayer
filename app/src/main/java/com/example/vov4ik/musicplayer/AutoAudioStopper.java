@@ -22,6 +22,8 @@ public class AutoAudioStopper extends Service {//implements AudioManager.OnAudio
     public boolean focusOn = false;
     private Context context;
 
+    public AutoAudioStopper(){}
+
     AFListener afListenerMusic;
 
     public void setContext(Context context) {
@@ -32,8 +34,6 @@ public class AutoAudioStopper extends Service {//implements AudioManager.OnAudio
         mAudioManager = audioManager;
     }
 
-    private AutoAudioStopper() {
-    }
 
     @Override
     public void onCreate() {

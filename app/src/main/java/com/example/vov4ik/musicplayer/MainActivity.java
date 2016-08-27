@@ -6,23 +6,21 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import java.security.PublicKey;
 
 
 /**
@@ -56,15 +54,22 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         if(PlayService.getPlayer()==null) {
+            Intent intent2 = new Intent(this, NotificationClass.class);
+            startService(intent2);
             Intent intent = new Intent(this, PlayService.class);
             startService(intent);
             Intent intent1 = new Intent(this, AutoAudioStopper.class);
             startService(intent1);
+//            Intent intent3 = new Intent(this, PhoneCallReceiver.class);
+//            startService(intent3);
+
             AudioManager am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
             AutoAudioStopper.getInstance().setAudioManager(am);
             AutoAudioStopper.getInstance().setContext(this);
             ComponentName mReceiverComponent = new ComponentName(this,HeadphonesClickReceiver.class);
             am.registerMediaButtonEventReceiver(mReceiverComponent);
+
 //            IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
 //            filter.setPriority(1000);
 //            HeadphonesClickReceiver r = new HeadphonesClickReceiver();
@@ -141,6 +146,46 @@ public class MainActivity extends AppCompatActivity {
                 buttonChanger();
             }
         });
+        Button showPlaylist = (Button) findViewById(R.id.openPlayerList);
+        assert showPlaylist != null;
+        showPlaylist.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
+                startActivity(intent);
+            }
+        });
+        final Button shuffle = (Button) findViewById(R.id.shuffle);
+        assert shuffle != null;
+        if(PlayService.isShuffle()){
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
+        }else{
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
+        }
+        shuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(PlayService.isShuffle()){
+                    PlayService.setShuffle(false);
+                    shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
+                }else{
+                    PlayService.setShuffle(true);
+                    shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
+                }
+            }
+        });
+        LinearLayout layout = (LinearLayout)findViewById(R.id.playMenu);
+        assert layout != null;
+        layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("test", v.getId()+"");
+                Log.d("test", v.toString());
+                v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+            }
+        });
+
+
         if(!PlayService.isPlayingNow()) {
             NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             PlayService.playFile("START", getApplicationContext(), nm);
@@ -252,10 +297,7 @@ public class MainActivity extends AppCompatActivity {
                 toast.show();
             }
         }
-        if (id == R.id.showPlaylist) {
-            Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
-            startActivity(intent);
-        }
+
         if (id == R.id.closePlayer) {
             AlarmManager manager;
             PendingIntent pendingIntent;

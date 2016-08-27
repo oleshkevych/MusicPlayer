@@ -1,9 +1,9 @@
 package com.example.vov4ik.musicplayer;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
 import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
@@ -30,6 +30,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private List<String> path = new ArrayList<>();
     private List<String> musicFilesName = new ArrayList<>();
     private String clickedFile;
+    private String playingNow;
 
 
     private static final int UI_ANIMATION_DELAY = 300;
@@ -92,6 +93,8 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
+
         setContentView(R.layout.activity_player);
 
         mContentView = findViewById(R.id.fullscreen_content);
@@ -110,7 +113,6 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             clickedFile = intent.getStringExtra(EXTRA_FOR_CLICKED_FILE);
 
         if(clickedFile.equals("ADD")) {
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             setPath(PlayService.getPath());
             PlayService.addPaths(newPathList);
         }else{
@@ -120,28 +122,40 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
             setPath(newPathList);
         }else {
-            setPath(PlayService.getPath());
+            if(PlayService.isShuffle()){
+                setPath(PlayService.getShufflePath());
+            }else {
+                setPath(PlayService.getPath());
+            }
         }
         showViews();
+
     }
 
-    private void showViews(){
+    public void showViews(){
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutPlayer);
         linearLayout.removeAllViews();
+        playingNow = PlayService.playingFile;
         for (String s : musicFilesName) {
             TextView text = new TextView(linearLayout.getContext());
             text.setText(String.valueOf(s));
             text.setId((musicFilesName).indexOf(s));
             linearLayout.addView(text);
             text.setOnClickListener(this);
-            text.setPadding(20, 10, 20, 10);
-            text.setTextSize(16);
-            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
-            mlp.setMargins(0, 15, 0, 15);
-            if (PlayService.isPlayingNow() && s.equals(clickedFile)) {
+            if (PlayService.isPlayingNow() && path.get((musicFilesName).indexOf(s)).equals(playingNow)) {
                 text.setPadding(80, 10, 20, 10);
+                text.setTextSize(18);
+                text.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+                mlp.setMargins(40, 15, 0, 15);
+            }else {
+                text.setPadding(20, 10, 20, 10);
+                text.setTextSize(16);
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+                mlp.setMargins(0, 15, 0, 15);
             }
         }
+        fetchLooper();
     }
     @Override
     public void onClick(View v) {
@@ -151,6 +165,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         showViews();
     }
 
+    private void fetchLooper(){
+        new FetchTask().execute();
+    }
+
     @Override
     public void onBackPressed() {
 //        moveTaskToBack(true);
@@ -158,7 +176,33 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 //        startActivity(intent);
         super.onBackPressed();
     }
+    private class FetchTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                Log.d("Test", "sleep failure");
+                            }
+                        }
+                    }
+            ).start();
+            return null;
+        }
 
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if(playingNow.equals(PlayService.playingFile)){
+                fetchLooper();
+            }else{
+                showViews();
+            }
+        }
+    }
 
 
 

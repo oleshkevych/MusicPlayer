@@ -17,11 +17,11 @@ import java.io.File;
  * Created by vov4ik on 8/21/2016.
  */
 public class NotificationClass extends Service{
-    private static Context context;
-    private static NotificationManager nm;
-    private static NotificationCompat.Builder builder;
-    private static PendingIntent pIntent;
-    private static int color;
+    private Context context;
+    private NotificationManager nm;
+    private NotificationCompat.Builder builder;
+    private PendingIntent pIntent;
+    private int color;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return super.onStartCommand(intent, flags, startId);
@@ -29,19 +29,22 @@ public class NotificationClass extends Service{
     @Override
     public void onCreate() {
         super.onCreate();
-        color  = getResources().getColor(R.color.colorPrimary);
-        context = getApplicationContext();
-        nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        builder = new NotificationCompat.Builder(this);
+        this.color  = getResources().getColor(R.color.colorPrimary);
+        this.context = getApplicationContext();
+        this.nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        this.builder = new NotificationCompat.Builder(this);
         Intent intent = new Intent(this, MainActivity.class);
-        pIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        builder.setContentIntent(pIntent);
+        this.pIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
     }
-    public static void sendNotification() {
+    public void sendNotification() {
         String playingFile = PlayService.playingFile;
-//        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         Log.d("test", playingFile + " NOTIFICATION");
-//        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         String allTitle;
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         mmr.setDataSource(playingFile);
@@ -54,14 +57,14 @@ public class NotificationClass extends Service{
             allTitle = title+" - "+title1;
             }
         mmr.release();
-        builder.setContentTitle("Player")
+         builder.setContentTitle("Player")
                 .setAutoCancel(false)
                 .setColor(color)
                 .setContentText(allTitle)
                 .setSmallIcon(R.drawable.play_button_png);
 //        Intent intent = new Intent(this, MainActivity.class);
 //        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
-        builder.setContentIntent(pIntent);
+
         nm.notify(1, builder.build());
     }
 

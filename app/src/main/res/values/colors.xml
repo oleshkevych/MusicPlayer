@@ -6,10 +6,10 @@
     <color name="colorWhite">#a6ffffff</color>
     <color name="checkedBackground">#39ffffff</color>
     <color name="checkedBorderColor">#994195fa</color>
-    <color name="colorPreviousButton">#99e441fa</color>
-    <color name="colorNextButton">#9941fa5d</color>
+    <color name="colorNotificationBackground">#ef010e59</color>
+    <color name="colorNotificationText">#b9ffffff</color>
     <color name="colorPlay">#af0234e7</color>
     <color name="colorIconNotification">#f40016a3</color>
-
+    <color name="colorPrimaryBlack">#fb000000</color>
     <color name="black_overlay">#66000000</color>
 </resources>

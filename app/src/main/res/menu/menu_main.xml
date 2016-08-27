@@ -13,11 +13,6 @@
         android:title="Add selected to playlist"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/showPlaylist"
-        android:orderInCategory="100"
-        android:title="Show Playlist"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/closePlayer"
         android:orderInCategory="100"
         android:title="Quit"
