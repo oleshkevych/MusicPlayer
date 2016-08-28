@@ -14,12 +14,17 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -37,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private PagerAdapter adapter;
     final static String EXTRA_FOR_CLICKED_FILE = "extra for clicked file";
     final static String EXTRA_FOR_PATHS = "extra for paths";
+    private AsyncTask async;
+    private boolean asyncStop = false;
 
 
 
@@ -60,21 +67,17 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
             Intent intent1 = new Intent(this, AutoAudioStopper.class);
             startService(intent1);
-//            Intent intent3 = new Intent(this, PhoneCallReceiver.class);
-//            startService(intent3);
 
-            AudioManager am = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
             AutoAudioStopper.getInstance().setAudioManager(am);
             AutoAudioStopper.getInstance().setContext(this);
-            ComponentName mReceiverComponent = new ComponentName(this,HeadphonesClickReceiver.class);
+            ComponentName mReceiverComponent = new ComponentName(this, HeadphonesClickReceiver.class);
             am.registerMediaButtonEventReceiver(mReceiverComponent);
-
-//            IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
-//            filter.setPriority(1000);
-//            HeadphonesClickReceiver r = new HeadphonesClickReceiver();
-//            am.registerMediaButtonEventReceiver();
-//            registerReceiver(r, filter);
+        }
+        if(!PlayService.isPlayingNow()) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            PlayService.playFile("START", getApplicationContext(), nm);
         }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -111,46 +114,86 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-
-
+        int[] ID = new int[]{R.id.layoutForButton1, R.id.layoutForButton2,R.id.layoutForButton3,R.id.layoutForButton4,R.id.layoutForButton5};
+        final LinearLayout[] l= new LinearLayout[5];
+        for(int i = 0; i<ID.length; i++){
+            l[i] = (LinearLayout)findViewById(ID[i]);
+            assert l[i] != null;
+        }
         final Button playButton = (Button) findViewById(R.id.playButton);
 
         assert playButton != null;
+        playButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                l[2].setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                return false;
+            }
+        });
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(!PlayService.isPlayingNow()){
                     PlayService.startPlaying();
                 }else{
                     PlayService.pausePlaying();
                 }
                 buttonChanger();
+                progressWriter();
+
             }
         });
         Button nextButton = (Button) findViewById(R.id.nextButton);
         assert nextButton != null;
+        nextButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                l[3].setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                return false;
+            }
+        });
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 PlayService.nextSong();
-               buttonChanger();
+                progressWriter();
+
 
             }
         });
         final ImageButton previousButton = (ImageButton) findViewById(R.id.previousButton);
         assert previousButton != null;
+        previousButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                l[1].setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                return false;
+            }
+        });
         previousButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 PlayService.previous();
-                buttonChanger();
+                progressWriter();
+
             }
         });
         Button showPlaylist = (Button) findViewById(R.id.openPlayerList);
         assert showPlaylist != null;
+        showPlaylist.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                l[0].setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                return false;
+            }
+        });
         showPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                l[0].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
                 startActivity(intent);
             }
@@ -162,33 +205,119 @@ public class MainActivity extends AppCompatActivity {
         }else{
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
         }
+        shuffle.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                l[4].setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                return false;
+            }
+        });
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(PlayService.isShuffle()){
+                l[4].setBackground(getResources().getDrawable(R.drawable.keys_shape));
+                if (PlayService.isShuffle()) {
                     PlayService.setShuffle(false);
                     shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
-                }else{
+                } else {
                     PlayService.setShuffle(true);
                     shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
                 }
             }
         });
-        LinearLayout layout = (LinearLayout)findViewById(R.id.playMenu);
-        assert layout != null;
-        layout.setOnClickListener(new View.OnClickListener() {
+
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seek_bar);
+        assert seekBar != null;
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progressChanged;
             @Override
-            public void onClick(View v) {
-                Log.d("test", v.getId()+"");
-                Log.d("test", v.toString());
-                v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    TextView currentTime = (TextView) findViewById(R.id.current_time);
+                    assert currentTime != null;
+
+                    String current =  progress/ 60000 + " : " + (((progress / 1000) % 60 > 10) ? ((progress / 1000) % 60) : ("0" + (progress / 1000) % 60));
+                    currentTime.setText(current);
+
+                    seekBar.setProgress(progress);
+                    progressChanged = progress;
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                async.cancel(true);
+                asyncStop = true;
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                asyncStop = false;
+                async = new FetchTask().execute();
+                PlayService.setLastPlayedTime(progressChanged);
+                if(PlayService.isPlayingNow()) {
+                    PlayService.startPlaying();
+                }
             }
         });
+        progressWriter();
+        async = new FetchTask().execute();
+    }
 
+    private void progressWriter(){
+        TextView currentTime = (TextView) findViewById(R.id.current_time);
+        assert currentTime != null;
+        TextView durationTime = (TextView) findViewById(R.id.current_duration);
+        assert durationTime != null;
+        TextView song = (TextView) findViewById(R.id.trek_name_main_activity);
+        assert song != null;
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seek_bar);
+        assert seekBar != null;
 
-        if(!PlayService.isPlayingNow()) {
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            PlayService.playFile("START", getApplicationContext(), nm);
+        int dur = PlayService.duration();
+        int cur = PlayService.currentTime();
+        String current =  cur/ 60000 + " : " + (((cur / 1000) % 60 >= 10) ? ((cur / 1000) % 60) : ("0" + (cur / 1000) % 60));
+        String duration = dur / 60000 + " : " + (((dur / 1000) % 60 >= 10) ? ((dur / 1000) % 60) : ("0" + (dur / 1000) % 60));
+
+        currentTime.setText(current);
+
+        durationTime.setText(duration);
+
+        song.setText(PlayService.trekName());
+
+        seekBar.setMax(dur);
+        seekBar.setProgress(cur);
+        seekBar.setSecondaryProgress(dur);
+
+    }
+    private class FetchTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            Thread t = new Thread(){
+                        @Override
+                        public void run() {
+                            try {
+                                while (!isInterrupted()&&!asyncStop) {
+                                    Thread.sleep(500);
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if(PlayService.isPlayingNow()) {
+                                                progressWriter();
+                                            }
+                                            buttonChanger();
+                                        }
+                                    });
+                                }
+
+                            } catch (InterruptedException e) {
+                                Log.d("Test", "sleep failure");
+                            }
+                        }
+            };
+                t.start();
+            return null;
         }
     }
 
@@ -200,21 +329,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void buttonChanger(){
         if(PlayService.isPlayingNow()){
-            /*AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
-            manager.cancel(pendingIntent);
-            pendingIntent.cancel();*/
             Button playButton = (Button) findViewById(R.id.playButton);
+            assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.pause_png));
         }else{
-           /* AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, alarmIntent, 0);
-
-            int interval = 900000;
-            manager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), interval, pendingIntent);*/
             Button playButton = (Button) findViewById(R.id.playButton);
+            assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.play_button_png));
 
         }
@@ -226,18 +346,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
     private class RefreshDb extends AsyncTask<Void, Void, Void> {
-    @Override
-    protected Void doInBackground(Void... params) {
-        new DbConnector().fillerForDb(getApplicationContext());
-        return null;
-    }
+        @Override
+        protected Void doInBackground(Void... params) {
+            new DbConnector().fillerForDb(getApplicationContext());
+            return null;
+        }
 
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-        setExecuteTrigger(false);
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            setExecuteTrigger(false);
+        }
     }
-}
 
     @Override
     public void onBackPressed() {
@@ -299,13 +419,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.closePlayer) {
-            AlarmManager manager;
-            PendingIntent pendingIntent;
-            manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            Intent alarmIntent = new Intent(this, AlarmReceiver.class);
-            pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
-            int interval = 180000;
-            manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
             PlayService.pausePlaying();
             Intent intent = new Intent(getApplicationContext(), PlayService.class);
             stopService(intent);
@@ -337,6 +450,8 @@ public class MainActivity extends AppCompatActivity {
         pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
         int interval = 180000;
         manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
+
+        async.cancel(true);
         super.onDestroy();
     }
 }

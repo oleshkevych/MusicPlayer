@@ -53,101 +53,149 @@
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_below="@id/tab_layout"
-            android:layout_marginBottom="90dp"/>
+            android:layout_marginBottom="120dp"/>
 
     </RelativeLayout>
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="90dp"
+        android:layout_height="120dp"
         android:fitsSystemWindows="true"
         android:layout_gravity="bottom"
         android:background="@color/black_overlay">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:orientation="horizontal"
+            android:layout_height="70dp"
+            android:orientation="vertical"
             android:padding="5dp"
             android:background="@color/colorWhite">
 
+            <TextView
+                android:id="@+id/trek_name_main_activity"
+                android:textColor="@color/colorPrimaryBlack"
+                android:textAlignment="center"
+                android:textSize="17sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/current_time"
+                    android:textColor="@color/black_overlay_for_time_counter"
+                    android:textSize="12sp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/current_duration"
+                    android:textColor="@color/black_overlay_for_time_counter"
+                    android:textSize="12sp"
+                    android:layout_alignParentRight="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:foregroundGravity="right"/>
+            </RelativeLayout>
+
+
+                <SeekBar
+                    android:layout_marginTop="3dp"
+                    android:id="@+id/seek_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="3dp"
+                   android:progressDrawable="@drawable/p"
+                    android:thumbOffset="15dp"
+                    android:thumb="@color/checkedBorderColor"
+                    android:background="@drawable/progress"/>
 
         </LinearLayout>
         <LinearLayout
             android:id="@+id/playMenu"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="50dp"
             android:layout_gravity="bottom"
             android:orientation="horizontal"
             tools:ignore="UselessParent"
             android:padding="5dp">
             <LinearLayout
-                android:id="@+id/layoutForButton"
+                android:id="@+id/layoutForButton1"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
+                android:layout_height="40dp"
                 android:layout_weight="0.5"
                 android:background="@drawable/keys_shape"
                 android:gravity="center"
                 android:layout_gravity="center">
                 <Button
                     android:id="@+id/openPlayerList"
-                    android:layout_width="40dp"
-                    android:layout_height="37dp"
+                    android:layout_width="30dp"
+                    android:layout_height="25dp"
                     android:background="@drawable/player_list"/>
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="50dp"
+                android:id="@+id/layoutForButton2"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:layout_width="wrap_content"
                 android:background="@drawable/keys_shape"
+                android:layout_marginLeft="4dp"
                 android:gravity="center"
                 android:layout_gravity="center">
                 <ImageButton
                     android:id="@+id/previousButton"
-                    android:layout_width="40dp"
-                    android:layout_height="37dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:background="@drawable/previous_png"/>
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/layoutForButton3"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@drawable/keys_shape"
+                android:layout_marginLeft="4dp"
                 android:gravity="center"
                 android:layout_gravity="center">
                 <Button
                     android:id="@+id/playButton"
-                    android:layout_width="40dp"
-                    android:layout_height="37dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:background="@drawable/play_button_png"/>
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/layoutForButton4"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:orientation="horizontal"
                 android:background="@drawable/keys_shape"
+                android:layout_marginLeft="4dp"
                 android:gravity="center"
                 android:layout_gravity="center">
                 <Button
                     android:id="@+id/nextButton"
-                    android:layout_width="40dp"
-                    android:layout_height="37dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:background="@drawable/next_png"/>
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/layoutForButton5"
                 android:layout_width="wrap_content"
-                android:layout_height="50dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@drawable/keys_shape"
+                android:layout_marginLeft="4dp"
                 android:gravity="center"
                 android:layout_gravity="center">
                 <Button
                     android:id="@+id/shuffle"
-                    android:layout_width="40dp"
-                    android:layout_height="37dp"/>
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"/>
             </LinearLayout>
 
         </LinearLayout>

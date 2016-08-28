@@ -5,11 +5,17 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorWhite">#a6ffffff</color>
     <color name="checkedBackground">#39ffffff</color>
-    <color name="checkedBorderColor">#994195fa</color>
+    <color name="checkedBorderColor">#f02485fa</color>
     <color name="colorNotificationBackground">#ef010e59</color>
-    <color name="colorNotificationText">#b9ffffff</color>
+    <color name="colorNotificationText">#efffffff</color>
     <color name="colorPlay">#af0234e7</color>
     <color name="colorIconNotification">#f40016a3</color>
     <color name="colorPrimaryBlack">#fb000000</color>
     <color name="black_overlay">#66000000</color>
+    <color name="black_overlay_for_time_counter">#af000000</color>
+    <color name="progress_background_start">#fd3561ff</color>
+    <color name="progress_background_end">#000c91</color>
+    <color name="color_remove_button">#e5da000b</color>
+    <color name="colorBackgroundPlay">#710234e7</color>
+
 </resources>

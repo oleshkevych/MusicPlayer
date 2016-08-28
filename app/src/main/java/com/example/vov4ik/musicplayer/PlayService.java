@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.RemoteViews;
 
 import java.io.File;
@@ -148,8 +149,11 @@ public class PlayService extends Service {
     }
 
     public static void playFile(String filePath){
-
-
+        if(filePath == null) {
+            addPaths(DbConnector.getLastPlayList(context));
+            PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
+            PlayService.playingFile = path.get(0);
+        }
         if(player == null){
             player = new MediaPlayer();
             player.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -192,13 +196,14 @@ public class PlayService extends Service {
         }
     }
 
+
     public static void playFile(String filePath, Context context, NotificationManager nm){
         if(filePath.equals("START")) {
             addPaths(DbConnector.getLastPlayList(context));
-            lastPlayedTime = DbConnector.getLastPlayTime(context);
-            playingFile = path.get(0);
+            PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
+            PlayService.playingFile = path.get(0);
         }else {
-            playingFile = filePath;
+            PlayService.playingFile = filePath;
         }
         PlayService.context = context;
         PlayService.nm = nm;
@@ -262,13 +267,54 @@ public class PlayService extends Service {
 
     public static void startPlaying() {
         playFile(playingFile);
+        sendNotification(context);
     }
 
     public static int duration(){
-        if(player == null){
-            return 0;
+        if(player == null||!isPlayingNow()){
+            if(playingFile!=null) {
+                MediaPlayer p = new MediaPlayer();
+                try {
+                    int d;
+                    p.setDataSource(playingFile);
+                    p.prepare();
+                    d = p.getDuration();
+                    p.stop();
+                    p.release();
+                    return d;
+                } catch (IOException e) {
+                    Log.d("test", e.toString());
+                    return 0;
+                }
+            }else{ return 0;}
         }else {
             return player.getDuration();
+        }
+    }
+    public static int currentTime(){
+        if(player == null){
+            return lastPlayedTime;
+        }else {
+            if(isPlayingNow()) {
+                return player.getCurrentPosition();
+            }else{
+                return lastPlayedTime;
+            }
+        }
+    }
+
+    public static String trekName(){
+        String playingFile = PlayService.playingFile;
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(playingFile);
+        String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        String artist  = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        mmr.release();
+        if ((title==null)||(title.equals(""))||(artist == null) || (artist.equals(""))||
+                (title.equals(" "))||(artist.equals(" "))) {
+            return  new File(playingFile).getName();
+        }else {
+            return  artist+" - "+title;
         }
     }
 
@@ -307,23 +353,24 @@ public class PlayService extends Service {
     }
 
     public static void sendNotification(Context context) {
+        Log.d("test", context.toString());
 
-        String playingFile = PlayService.playingFile;
-        Log.d("test", playingFile + "NOTIF");
+//        String playingFile = PlayService.playingFile;
+//        Log.d("test", playingFile + "NOTIF");
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-        String allTitle;
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(playingFile);
-        String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        String artist  = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        if ((title==null)||(title.equals(""))||(artist == null) || (artist.equals(""))||
-                (title.equals(" "))||(artist.equals(" "))) {
-//            artist = new File(playingFile).getName();
-            allTitle = new File(playingFile).getName();
-        }else {
-            allTitle = artist+" - "+title;
-        }
-        mmr.release();
+        String allTitle = trekName();
+//        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+//        mmr.setDataSource(playingFile);
+//        String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+//        String artist  = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+//        if ((title==null)||(title.equals(""))||(artist == null) || (artist.equals(""))||
+//                (title.equals(" "))||(artist.equals(" "))) {
+////            artist = new File(playingFile).getName();
+//            allTitle = new File(playingFile).getName();
+//        }else {
+//            allTitle = artist+" - "+title;
+//        }
+//        mmr.release();
 
         builder
 //                .setContentTitle("Player")
@@ -344,14 +391,13 @@ public class PlayService extends Service {
 //            rw.setTextViewText(R.id.notification_artist, artist);
             rw.setTextViewText(R.id.notification_trek, allTitle);
             rw.setImageViewResource(R.id.icon_notification, R.drawable.default_notification_icon);
-//        if(isPlayingNow()){
-//            rw.setViewVisibility(R.id.playButtonNotif, -10000);
-//            rw.setViewVisibility(R.id.pauseButtonNotif, 1);
-//            rw.setViewPadding(R.id.pauseButtonNotif, 0, 0, 4000, 0);
-//        }else {
-//            rw.setViewVisibility(R.id.playButtonNotif, 1);
-//            rw.setViewVisibility(R.id.pauseButtonNotif, -10000);
-//        }
+        if(isPlayingNow()){
+            rw.setViewVisibility(R.id.playButtonNotif, Button.INVISIBLE);
+            rw.setViewVisibility(R.id.pauseButtonNotif, Button.VISIBLE);
+        }else {
+            rw.setViewVisibility(R.id.playButtonNotif, Button.VISIBLE);
+            rw.setViewVisibility(R.id.pauseButtonNotif, Button.INVISIBLE);
+        }
         Intent closeIntent = new Intent(context, PlayService.class);
         closeIntent.setAction(CLOSE_ACTION);
         PendingIntent pcloseIntent = PendingIntent.getService(context, 0,
@@ -397,7 +443,7 @@ public class PlayService extends Service {
 
 
     private static void makeShufflePath(){
-        shufflePath = new ArrayList<>();
+        PlayService.shufflePath = new ArrayList<>();
         int lengthOfArray = path.size();
 
         int[]result = new int[lengthOfArray];
@@ -419,8 +465,6 @@ public class PlayService extends Service {
         if (playingFile!=null&&!playingFile.equals("")) {
             PlayService.shufflePath.remove(playingFile);
             PlayService.shufflePath.add(0, playingFile);
-        }
-        for(int j = 0; j<result.length; j++) {
         }
     }
 

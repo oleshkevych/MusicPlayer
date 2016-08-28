@@ -14,7 +14,8 @@
         android:layout_height="match_parent"
         android:background="@color/colorWhite"
         android:animateLayoutChanges="true"
-        android:verticalScrollbarPosition="right">
+        android:verticalScrollbarPosition="right"
+        android:layout_marginBottom="120dp">
         <LinearLayout
             android:id="@+id/layoutPlayer"
             android:layout_width="match_parent"
@@ -22,7 +23,164 @@
             android:orientation="vertical"
             android:padding="@dimen/scroll_padding"/>
     </ScrollView>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:layout_gravity="bottom">
+    <FrameLayout
+        android:id="@+id/menu_frame"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:fitsSystemWindows="true"
+        android:layout_gravity="bottom"
+        android:background="@color/black_overlay">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:orientation="vertical"
+            android:padding="5dp"
+            android:background="@color/colorWhite">
+
+            <TextView
+                android:id="@+id/trek_name_main_activity"
+                android:textColor="@color/colorPrimaryBlack"
+                android:textAlignment="center"
+                android:textSize="17sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/current_time"
+                    android:textColor="@color/black_overlay_for_time_counter"
+                    android:textSize="12sp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:id="@+id/current_duration"
+                    android:textColor="@color/black_overlay_for_time_counter"
+                    android:textSize="12sp"
+                    android:layout_alignParentRight="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:foregroundGravity="right"/>
+            </RelativeLayout>
 
 
+            <SeekBar
+                android:layout_marginTop="3dp"
+                android:id="@+id/seek_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:progressDrawable="@drawable/p"
+                android:thumbOffset="15dp"
+                android:thumb="@color/checkedBorderColor"
+                android:background="@drawable/progress"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/playMenu"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom"
+            android:orientation="horizontal"
+            tools:ignore="UselessParent"
+            android:padding="5dp">
+
+            <LinearLayout
+                android:id="@+id/layoutForButton2"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:background="@drawable/keys_shape"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <ImageButton
+                    android:id="@+id/previousButton"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
+                    android:background="@drawable/previous_png"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutForButton3"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/keys_shape"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <Button
+                    android:id="@+id/playButton"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
+                    android:background="@drawable/play_button_png"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutForButton4"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:background="@drawable/keys_shape"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <Button
+                    android:id="@+id/nextButton"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
+                    android:background="@drawable/next_png"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutForButton5"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/keys_shape"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:gravity="center"
+                android:layout_gravity="center">
+                <Button
+                    android:id="@+id/shuffle"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/remove_layout"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:fitsSystemWindows="true"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:background="@color/black_overlay"
+        android:visibility="invisible">
+        <Button
+            android:id="@+id/removeButton"
+            android:layout_width="150dp"
+            android:layout_height="100dp"
+            android:background="@color/color_remove_button"
+            android:textAlignment="center"
+            android:textSize="20sp"
+            android:text="Remove"
+            android:textColor="@color/colorPrimaryBlack"/>
+    </LinearLayout>
+    </RelativeLayout>
 
 </FrameLayout>

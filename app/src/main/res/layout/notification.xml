@@ -31,19 +31,19 @@
             <TextView
                 android:id="@+id/notification_trek"
                 android:layout_width="0dp"
-                android:layout_weight="10"
+                android:layout_weight="15"
                 android:layout_height="wrap_content"
                 android:textSize="15sp"
                 android:paddingLeft="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="7dp"
                 android:textColor="@color/colorNotificationText"/>
 
             <Button
                 android:layout_weight="1"
                 android:id="@+id/closeNotif"
                 android:layout_width="0dp"
-                android:layout_height="25dp"
-                android:padding="2dp"
+                android:layout_height="18dp"
+                android:layout_margin="5dp"
                 android:background="@drawable/close"/>
         </LinearLayout>
         <LinearLayout
@@ -64,7 +64,7 @@
                     android:padding="5dp"
                     android:background="@drawable/previous_png"/>
             </LinearLayout>
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -74,13 +74,15 @@
                     android:id="@+id/playButtonNotif"
                     android:layout_width="25dp"
                     android:layout_height="match_parent"
+                    android:visibility="invisible"
                     android:background="@drawable/play_button_png"/>
                 <Button
                     android:id="@+id/pauseButtonNotif"
                     android:layout_width="25dp"
                     android:layout_height="match_parent"
+                    android:visibility="invisible"
                     android:background="@drawable/pause_png"/>
-            </LinearLayout>
+            </RelativeLayout>
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
