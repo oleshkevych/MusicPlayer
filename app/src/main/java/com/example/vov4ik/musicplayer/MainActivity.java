@@ -1,11 +1,10 @@
 package com.example.vov4ik.musicplayer;
 
-import android.app.AlarmManager;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.LabeledIntent;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,25 +13,28 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     final static String EXTRA_FOR_PATHS = "extra for paths";
     private AsyncTask async;
     private boolean asyncStop = false;
+    public static List<String> playlistList = new ArrayList<>();
 
 
 
@@ -291,6 +294,46 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setSecondaryProgress(dur);
 
     }
+
+    @Override
+    public void onClick(View v) {
+        final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInMainActivity);
+        assert linearLayout != null;
+        final ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
+        if(v.getId()==0){
+            final LinearLayout inputLayout = (LinearLayout)findViewById(R.id.inputLayout);
+            assert inputLayout != null;
+            inputLayout.setVisibility(View.VISIBLE);
+            final EditText editText = (EditText)findViewById(R.id.addNewPlaylist);
+            assert editText != null;
+            Button addButton = (Button)findViewById(R.id.confirm);
+            assert addButton != null;
+            addButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MainActivity.playlistList.add(editText.getText().toString());
+                    inputLayout.setVisibility(View.GONE);
+                    showView();
+                    editText.setText("");
+                }
+            });
+
+        }else {
+            //DbConnector.setPlaylist(getApplicationContext(), ff.getSelectedPaths(), list.get(v.getId());
+            ViewPager pager = (ViewPager) findViewById(R.id.pager);
+            assert pager != null;
+            pager.setVisibility(ViewPager.VISIBLE);
+            linearLayout.setVisibility(LinearLayout.INVISIBLE);
+            LinearLayout linearLayout1 = (LinearLayout) findViewById(R.id.showPlaylistLayoutInMainActivity);
+            assert linearLayout1 != null;
+            linearLayout1.removeAllViews();
+            playlistList = new ArrayList<>();
+            if (ff.isCheckingTrigger()) {
+                ff.unselectMusicItems();
+            }
+        }
+    }
+
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
@@ -361,7 +404,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
+        ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
+        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        assert pager != null;
+        if (pager.getVisibility() == ViewPager.INVISIBLE) {
+            pager.setVisibility(ViewPager.VISIBLE);
+            LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInMainActivity);
+            assert linearLayout != null;
+            linearLayout.setVisibility(LinearLayout.INVISIBLE);
+            LinearLayout linearLayout1 = (LinearLayout) findViewById(R.id.showPlaylistLayoutInMainActivity);
+            assert linearLayout1 != null;
+            linearLayout1.removeAllViews();
+            playlistList = new ArrayList<>();
+        }
         if (ff.isCheckingTrigger()){
             ff.unselectMusicItems();
         }else if(ff.isFolderTrigger()) {
@@ -418,15 +473,40 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if (id == R.id.closePlayer) {
-            PlayService.pausePlaying();
-            Intent intent = new Intent(getApplicationContext(), PlayService.class);
-            stopService(intent);
-            finish();
+        if (id == R.id.addPlaylistInMenu) {
+            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
+            if (ff.getSelectedPaths().size()>0) {
+                ViewPager pager = (ViewPager) findViewById(R.id.pager);
+                assert pager != null;
+                pager.setVisibility(ViewPager.INVISIBLE);
+                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInMainActivity);
+                assert linearLayout != null;
+                linearLayout.setVisibility(LinearLayout.VISIBLE);
+                playlistList.add("+ Add New Playlist");
+                //list.addAll(DbConnector.getPlaylists(getApplicationContext));
+               showView();
+            }else{
+                Toast.makeText(getApplicationContext(), "Make shore, that you have selected some thing! ", Toast.LENGTH_SHORT).show();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
-
+    private void showView(){
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.showPlaylistLayoutInMainActivity);
+        assert linearLayout != null;
+        linearLayout.removeAllViews();
+        for (String s : playlistList) {
+            TextView text = new TextView(linearLayout.getContext());
+            text.setText(String.valueOf(s));
+            text.setId((playlistList).indexOf(s));
+            linearLayout.addView(text);
+            text.setOnClickListener(this);
+            text.setPadding(20, 10, 20, 10);
+            text.setTextSize(18);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(40, 15, 0, 15);
+        }
+    }
 //    public boolean isMyServiceRunning(Class<?> serviceClass) {
 //        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 //        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -440,16 +520,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        AlarmManager manager;
-        PendingIntent pendingIntent;
-        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-
-//      START NotificationClass.sendNotification();
-        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
-        int interval = 180000;
-        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
+//        AlarmManager manager;
+//        PendingIntent pendingIntent;
+//        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//
+//
+////      START NotificationClass.sendNotification();
+//        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+//        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
+//        int interval = 180000;
+//        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
 
         async.cancel(true);
         super.onDestroy();

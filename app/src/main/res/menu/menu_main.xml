@@ -10,11 +10,11 @@
     <item
         android:id="@+id/addSelected"
         android:orderInCategory="100"
-        android:title="Add selected to playlist"
+        android:title="Add selected to current playlist"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/closePlayer"
+        android:id="@+id/addPlaylistInMenu"
         android:orderInCategory="100"
-        android:title="Quit"
+        android:title="Add to playlist"
         app:showAsAction="never"/>
 </menu>

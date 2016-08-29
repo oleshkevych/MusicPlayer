@@ -52,8 +52,51 @@
             android:id="@+id/pager"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
-            android:layout_below="@id/tab_layout"
+            android:layout_below="@+id/tab_layout"
             android:layout_marginBottom="120dp"/>
+        <LinearLayout
+            android:id="@+id/playListLayoutInMainActivity"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:visibility="invisible"
+            android:layout_marginBottom="120dp"
+            android:layout_below="@+id/tab_layout">
+            <LinearLayout
+                android:id="@+id/inputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+                <EditText
+                    android:id="@+id/addNewPlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:hint="Playlist Name"
+                    android:textSize="20sp"
+                    android:textAlignment="center"
+                    android:background="@drawable/checked_view_background"
+                    android:textColor="@color/colorPrimaryBlack"
+                    android:inputType="text"
+                    android:layout_weight="1"/>
+                <Button
+                    android:id="@+id/confirm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textAlignment="center"
+                    android:layout_gravity="right"
+                    android:layout_weight="1"
+                    android:padding="2dp"
+                    android:text="Add"
+                    android:textColor="@color/colorPrimaryBlack"/>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/showPlaylistLayoutInMainActivity"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical">
+            </LinearLayout>
+        </LinearLayout>
 
     </RelativeLayout>
     <!-- This FrameLayout insets its children based on system windows using

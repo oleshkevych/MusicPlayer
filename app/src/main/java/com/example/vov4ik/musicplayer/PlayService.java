@@ -7,6 +7,8 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -168,9 +170,7 @@ public class PlayService extends Service {
         }
 
         playingFile = filePath;
-        if((context!=null)&&(nm!=null)) {
-            sendNotification(context);
-        }
+
         try {
             player.setDataSource(filePath);
             player.setVolume(100, 100);
@@ -190,7 +190,9 @@ public class PlayService extends Service {
 
                 }
             });
-
+            if((context!=null)&&(nm!=null)) {
+                sendNotification(context);
+            }
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -305,11 +307,17 @@ public class PlayService extends Service {
 
     public static String trekName(){
         String playingFile = PlayService.playingFile;
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(playingFile);
-        String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        String artist  = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        mmr.release();
+        String title, artist;
+        try {
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(playingFile);
+            title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+            artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            mmr.release();
+        }catch(IllegalArgumentException e){
+            title = "file";
+            artist = "no";
+        }
         if ((title==null)||(title.equals(""))||(artist == null) || (artist.equals(""))||
                 (title.equals(" "))||(artist.equals(" "))) {
             return  new File(playingFile).getName();
@@ -353,10 +361,10 @@ public class PlayService extends Service {
     }
 
     public static void sendNotification(Context context) {
-        Log.d("test", context.toString());
+
 
 //        String playingFile = PlayService.playingFile;
-//        Log.d("test", playingFile + "NOTIF");
+//        Log.d("test", playingFile + " NOTIF");
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         String allTitle = trekName();
 //        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
@@ -376,7 +384,6 @@ public class PlayService extends Service {
 //                .setContentTitle("Player")
 //                .setColor(color)
 //                .setContentText(allTitle)
-                .setSmallIcon(R.drawable.play_button_png)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setAutoCancel(false)
@@ -390,13 +397,20 @@ public class PlayService extends Service {
         RemoteViews rw = new RemoteViews(context.getPackageName(), R.layout.notification);
 //            rw.setTextViewText(R.id.notification_artist, artist);
             rw.setTextViewText(R.id.notification_trek, allTitle);
+        Bitmap icon = getImage();
+        if(icon!=null){
+            rw.setImageViewBitmap(R.id.icon_notification, icon);
+        }else {
             rw.setImageViewResource(R.id.icon_notification, R.drawable.default_notification_icon);
+        }
         if(isPlayingNow()){
             rw.setViewVisibility(R.id.playButtonNotif, Button.INVISIBLE);
             rw.setViewVisibility(R.id.pauseButtonNotif, Button.VISIBLE);
+            builder.setSmallIcon(R.drawable.pause_png);
         }else {
             rw.setViewVisibility(R.id.playButtonNotif, Button.VISIBLE);
             rw.setViewVisibility(R.id.pauseButtonNotif, Button.INVISIBLE);
+            builder.setSmallIcon(R.drawable.play_button_png);
         }
         Intent closeIntent = new Intent(context, PlayService.class);
         closeIntent.setAction(CLOSE_ACTION);
@@ -438,7 +452,26 @@ public class PlayService extends Service {
 
 
         nm.notify(1, notification);
+        timer();
 //        }
+    }
+
+    public static Bitmap getImage(){
+        Bitmap image;
+        try {
+            MediaMetadataRetriever mData = new MediaMetadataRetriever();
+            mData.setDataSource(playingFile);
+            try {
+                byte art[] = mData.getEmbeddedPicture();
+                image = BitmapFactory.decodeByteArray(art, 0, art.length);
+            } catch (Exception e) {
+                image = null;
+            }
+            mData.release();
+        }catch(IllegalArgumentException e){
+            image = null;
+        }
+        return image;
     }
 
 
@@ -469,15 +502,16 @@ public class PlayService extends Service {
     }
 
     public static void timer(){
-        new Thread(
+        if (!isPlayingNow()) {
+            new Thread(
                     new Runnable() {
                         @Override
                         public void run() {
                             int incr;
-                            for (incr = 0; incr <= 90000; incr+=1000) {
-                                if (!pauseTrigger){
+                            for (incr = 0; incr <= 300000; incr += 1000) {
+                                if (isPlayingNow()) {
                                     break;
-                                }else if (incr == 90000){
+                                } else if (incr == 300000 || context == null) {
                                     stopService();
                                 }
                                 try {
@@ -489,6 +523,7 @@ public class PlayService extends Service {
                         }
                     }
             ).start();
+        }
     }
 
     private static void stopService() {

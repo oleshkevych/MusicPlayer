@@ -2,10 +2,13 @@ package com.example.vov4ik.musicplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,11 +16,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,7 +50,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     private List<String> removeItemList = new ArrayList<>();
+    public static List<String> playlistList = new ArrayList<>();
     private boolean checkingTrigger = false;
+    private boolean background = false;
+    private boolean allChecked = false;
 
     public void setPath(List<String> newPath){
         //Add paths from Service if it is working
@@ -54,15 +63,18 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             File f = new File(s);
             if(!f.isDirectory()) {
                 path.add(s);
-
-                mmr.setDataSource(f.getPath());
-                String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-                if ((title == null) || (title.equals(""))) {
+                String title;
+                try {
+                    mmr.setDataSource(f.getPath());
+                    title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+                 }catch(IllegalArgumentException e) {
+                    title = "Refresh the Database";
+                }
+                if ((title == null) || (title.equals(""))||(title.equals("Refresh the Database!"))) {
                     musicFilesName.add(f.getName());
                 } else {
                     musicFilesName.add(title);
                 }
-
             }
         }
         mmr.release();
@@ -70,39 +82,9 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
 
 
-    private final Runnable mHidePart2Runnable = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            // Delayed removal of status and navigation bar
-
-            // Note that some of these constants are new as of API 16 (Jelly Bean)
-            // and API 19 (KitKat). It is safe to use them, as they are inlined
-            // at compile-time and do nothing on earlier devices.
-            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        }
-    };
-
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
 
         setContentView(R.layout.activity_player);
 
@@ -283,18 +265,30 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         progressWriter();
         async = new FetchTask().execute();
 
+        final Button checkAllButton = (Button) findViewById(R.id.checkAll);
+        assert checkAllButton != null;
+        checkAllButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(allChecked){
+                    allChecked = false;
+                    removeItemList = new ArrayList<String>();
+                }
+                else {
+                    allChecked = true;
+                    removeItemList = new ArrayList<String>();
+                    removeItemList.addAll(path);
+                }
+                showViews();
+            }
+        });
+
         Button remove = (Button) findViewById(R.id.removeButton);
         assert remove != null;
         remove.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FrameLayout main = (FrameLayout)findViewById(R.id.menu_frame);
-                assert main != null;
-                main.setVisibility(FrameLayout.VISIBLE);
-                LinearLayout remove = (LinearLayout)findViewById(R.id.remove_layout);
-                assert remove != null;
-                remove.setVisibility(LinearLayout.INVISIBLE);
-                checkingTrigger = false;
+
                 List<String> newPath = new ArrayList<String>();
                 path.removeAll(removeItemList);
                 newPath = path;
@@ -307,6 +301,43 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 removeItemList = new ArrayList<String>();
             }
         });
+        Button addToPlayList = (Button) findViewById(R.id.addToPlaylist);
+        assert addToPlayList != null;
+        addToPlayList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(removeItemList.size() == 0){
+                    Toast.makeText(getApplicationContext(), "On selected songs!", Toast.LENGTH_SHORT).show();
+                }else{
+                    ScrollView pager = (ScrollView) findViewById(R.id.fullscreen_content);
+                    assert pager != null;
+                    pager.setVisibility(ViewPager.INVISIBLE);
+                    LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInPLayerActivity);
+                    assert linearLayout != null;
+                    linearLayout.setVisibility(LinearLayout.VISIBLE);
+                    playlistList.add("+Add Playlist");
+                    //list.addAll(DbConnector.getPlaylists(getApplicationContext));
+                    showPlaylistView();
+                }
+            }
+        });
+    }
+
+    private void showPlaylistView(){
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.showPlaylistLayoutInPLayerActivity);
+        assert linearLayout != null;
+        linearLayout.removeAllViews();
+        for (String s : playlistList) {
+            TextView text = new TextView(linearLayout.getContext());
+            text.setText(String.valueOf(s));
+            text.setId((playlistList).indexOf(s));
+            linearLayout.addView(text);
+            text.setOnClickListener(this);
+            text.setPadding(20, 10, 20, 10);
+            text.setTextSize(18);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(40, 15, 0, 15);
+        }
     }
 
     private void progressWriter(){
@@ -351,25 +382,47 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         return true;
     }
 
+    private void backgroundWriter(){
+
+        FrameLayout main = (FrameLayout) findViewById(R.id.playerActivityMainFrame);
+        Bitmap image = PlayService.getImage();
+        assert main != null;
+        if(image!=null){
+            background = true;
+            BitmapDrawable ob = new BitmapDrawable(getResources(), image);
+            main.setBackground(ob);
+        }else{
+            background = false;
+            main.setBackgroundColor(getResources().getColor(R.color.colorMainBackgroundForPlayerActivity));
+        }
+    }
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             Thread t = new Thread(){
+                int i = 0;
                 @Override
                 public void run() {
                     try {
+
                         while (!isInterrupted()&&!asyncStop) {
                             Thread.sleep(500);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     if(!playingNow.equals(PlayService.playingFile)){
+                                        backgroundWriter();
                                         showViews();
                                     }
                                     if(PlayService.isPlayingNow()) {
                                         progressWriter();
                                     }
+                                    if(i==4){
+                                        delayedHide(50);
+                                        i=0;
+                                    }
                                     buttonChanger();
+                                    i++;
                                 }
                             });
                         }
@@ -421,6 +474,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             linearLayout.addView(text);
             text.setOnClickListener(this);
             text.setOnLongClickListener(this);
+
             if (PlayService.isPlayingNow() && path.get((musicFilesName).indexOf(s)).equals(playingNow)) {
                 text.setPadding(80, 10, 20, 10);
                 text.setTextSize(18);
@@ -428,10 +482,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
                 mlp.setMargins(40, 15, 0, 15);
             }else {
-                text.setPadding(20, 10, 20, 10);
+                text.setPadding(30, 10, 20, 10);
                 text.setTextSize(16);
                 ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
                 mlp.setMargins(0, 15, 0, 15);
+            }
+            if(background&&!(PlayService.isPlayingNow() && path.get((musicFilesName).indexOf(s)).equals(playingNow))){
+                text.setBackground(getResources().getDrawable(R.drawable.background_if_this_is_prasent));
             }
             if(checkingTrigger&&removeItemList.contains(path.get((musicFilesName).indexOf(s)))){
                 text.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
@@ -441,22 +498,65 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     }
     @Override
     public void onClick(View v) {
-        if(checkingTrigger){
-            if ((v.getTag()!=null)&&v.getTag().equals("checked")){
-                v.setBackground(null);
-                v.setTag(null);
-                removeItemList.remove(path.get(v.getId()));
+        final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInPLayerActivity);
+        assert linearLayout != null;
+        if(linearLayout.getVisibility()==View.INVISIBLE) {
+            if (checkingTrigger) {
+                if ((v.getTag() != null) && v.getTag().equals("checked")) {
+                    v.setBackground(null);
+                    v.setTag(null);
+                    removeItemList.remove(path.get(v.getId()));
+                } else {
+                    v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                    removeItemList.add(path.get(v.getId()));
+                    v.setTag("checked");
+                    v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                }
             } else {
-                v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
-                removeItemList.add(path.get(v.getId()));
-                v.setTag("checked");
-                v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                clickedFile = path.get(v.getId());
+                PlayService.setLastPlayedTime(0);
+                PlayService.playFile(clickedFile);
+                showViews();
             }
-        }else {
-            clickedFile = path.get(v.getId());
-            PlayService.setLastPlayedTime(0);
-            PlayService.playFile(clickedFile);
-            showViews();
+        }else{
+            if(v.getId()==0){
+                final LinearLayout inputLayout = (LinearLayout)findViewById(R.id.inputLayoutInPLayerActivity);
+                assert inputLayout != null;
+                inputLayout.setVisibility(View.VISIBLE);
+                final EditText editText = (EditText)findViewById(R.id.addNewPlaylistInPLayerActivity);
+                assert editText != null;
+                Button addButton = (Button)findViewById(R.id.confirmInPLayerActivity);
+                assert addButton != null;
+                addButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        PlayerActivity.playlistList.add(editText.getText().toString());
+                        inputLayout.setVisibility(View.GONE);
+                        showPlaylistView();
+                        editText.setText("");
+                    }
+                });
+
+            }else {
+                //DbConnector.setPlaylist(getApplicationContext(), removeItemList, list.get(v.getId());
+                ScrollView pager = (ScrollView) findViewById(R.id.fullscreen_content);
+                assert pager != null;
+                pager.setVisibility(View.VISIBLE);
+                linearLayout.setVisibility(LinearLayout.INVISIBLE);
+                LinearLayout linearLayout1 = (LinearLayout) findViewById(R.id.showPlaylistLayoutInPLayerActivity);
+                assert linearLayout1 != null;
+                linearLayout1.removeAllViews();
+                playlistList = new ArrayList<>();
+                removeItemList = new ArrayList<>();
+                FrameLayout main = (FrameLayout)findViewById(R.id.menu_frame);
+                assert main != null;
+                main.setVisibility(FrameLayout.VISIBLE);
+                LinearLayout remove = (LinearLayout)findViewById(R.id.remove_layout);
+                assert remove != null;
+                remove.setVisibility(LinearLayout.INVISIBLE);
+                checkingTrigger = false;
+                showViews();
+            }
         }
     }
 
@@ -471,6 +571,18 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 //        moveTaskToBack(true);
 //        Intent intent = new Intent(this, MainActivity.class);
 //        startActivity(intent);
+        final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInPLayerActivity);
+        assert linearLayout != null;
+        if (linearLayout.getVisibility() == ViewPager.VISIBLE) {
+            linearLayout.setVisibility(ViewPager.INVISIBLE);
+            ScrollView pager = (ScrollView) findViewById(R.id.fullscreen_content);
+            assert pager != null;
+            pager.setVisibility(View.VISIBLE);
+            LinearLayout linearLayout1 = (LinearLayout) findViewById(R.id.showPlaylistLayoutInPLayerActivity);
+            assert linearLayout1 != null;
+            linearLayout1.removeAllViews();
+            playlistList = new ArrayList<>();
+        }
         if(checkingTrigger){
             FrameLayout main = (FrameLayout)findViewById(R.id.menu_frame);
             assert main != null;
@@ -499,6 +611,30 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         // are available.
         delayedHide(50);
     }
+    private final Runnable mHidePart2Runnable = new Runnable() {
+        @SuppressLint("InlinedApi")
+        @Override
+        public void run() {
+            // Delayed removal of status and navigation bar
+
+            // Note that some of these constants are new as of API 16 (Jelly Bean)
+            // and API 19 (KitKat). It is safe to use them, as they are inlined
+            // at compile-time and do nothing on earlier devices.
+            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
+    };
+
+    private final Runnable mHideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            hide();
+        }
+    };
 
     private void hide() {
         // Hide UI first

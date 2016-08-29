@@ -309,6 +309,7 @@ public class DbConnector {
     }
     public static void setLastPlayListAndTime(Context context, List<String> list, int time){
         new DbHelper(context).setLastPlayListAndTime(list, time);
+        Log.d("test", "Load");
     }
 
 }

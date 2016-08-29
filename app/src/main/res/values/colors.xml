@@ -17,5 +17,9 @@
     <color name="progress_background_end">#000c91</color>
     <color name="color_remove_button">#e5da000b</color>
     <color name="colorBackgroundPlay">#710234e7</color>
+    <color name="colorBackgroundForPlayerActivity">#bcffffff</color>
+    <color name="colorMainBackgroundForPlayerActivity">#0099cc</color>
+
+
 
 </resources>
