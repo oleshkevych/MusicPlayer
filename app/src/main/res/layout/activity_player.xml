@@ -89,6 +89,12 @@
             <TextView
                 android:id="@+id/trek_name_main_activity"
                 android:textColor="@color/colorPrimaryBlack"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit ="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollHorizontally="true"
                 android:textAlignment="center"
                 android:textSize="17sp"
                 android:layout_width="match_parent"
@@ -197,7 +203,7 @@
                 android:gravity="center"
                 android:layout_gravity="center">
                 <Button
-                    android:id="@+id/shuffle"
+                    android:id="@+id/shuffle_player_activity"
                     android:layout_width="30dp"
                     android:layout_height="27dp"/>
             </LinearLayout>

@@ -94,6 +94,24 @@ public class DbConnector {
                 }
             }
         }
+        mmr.release();
+        List<String> folders1 = new ArrayList<String>();
+        List<String[]> path1 = new ArrayList<>();
+        List<String[]> musicFiles1 = new ArrayList<>();
+        for(int i = 0; i < folders.size(); i++){
+            folders1.add(folders.get(i));
+            path1.add(path.get(i));
+            musicFiles1.add(musicFiles.get(i));
+        }
+        Collections.sort(folders);
+        path.removeAll(path1);
+        musicFiles.removeAll(musicFiles1);
+
+        for(int i = 0; i < folders.size(); i++){
+            int index = folders1.indexOf(folders.get(i));
+            path.add(path1.get(index));
+            musicFiles.add(musicFiles1.get(index));
+        }
     }
 
     private void albumMethod(){
@@ -225,6 +243,19 @@ public class DbConnector {
                 }
             }
         }
+        List<String> mainFolders1 = new ArrayList<String>();
+        List<List<String>> pathForMainFolders1 = new ArrayList<>();
+        for(int i = 0; i < mainFolders.size(); i++){
+            mainFolders1.add(mainFolders.get(i));
+            pathForMainFolders1.add(pathForMainFolders.get(i));
+        }
+        Collections.sort(mainFolders);
+        pathForMainFolders.removeAll(pathForMainFolders1);
+
+        for(int i = 0; i < mainFolders.size(); i++){
+            int index = mainFolders1.indexOf(mainFolders.get(i));
+            pathForMainFolders.add(pathForMainFolders1.get(index));
+        }
     }
     private void getParent(String s){
         File f = new File(s);
@@ -311,7 +342,21 @@ public class DbConnector {
         new DbHelper(context).setLastPlayListAndTime(list, time);
         Log.d("test", "Load");
     }
-
+    public static void setPlaylist(Context context,String playlist, List<String> paths){
+        new DbPlaylist(context).playlistFiller(playlist, paths);
+    }
+    public static List<String> getPlaylist(Context context){
+        return new DbPlaylist(context).getPlaylist();
+    }
+    public static List<List<String>> getPlaylistFiles(Context context){
+        return new DbPlaylist(context).getPlaylistFiles();
+    }
+    public static void removePlaylist(Context context,String playlist){
+        new DbPlaylist(context).playlistRemover(playlist);
+    }
+    public static void removeFilesFromPlaylist(Context context, String playlist, List<String> files){
+        new DbPlaylist(context).playlistFileRemover(playlist, files);
+    }
 }
 ///////////////////////////////////For simple file manager
 /*

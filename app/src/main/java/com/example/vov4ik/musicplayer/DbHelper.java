@@ -3,6 +3,7 @@ package com.example.vov4ik.musicplayer;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -62,6 +63,8 @@ public class DbHelper extends SQLiteOpenHelper {
             COLUMN_PLAYED_TIME + " INTEGER);";
 
 
+
+
     private Context mContext;
     private SQLiteDatabase mDatabase;
     private String folderTop = "..GoToRoot";
@@ -81,7 +84,6 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ARTIST);
         db.execSQL(CREATE_TABLE_MAIN_FOLDER);
         db.execSQL(CREATE_TABLE_PLAY_SERVICE);
-
     }
 
     @Override
@@ -209,9 +211,13 @@ public class DbHelper extends SQLiteOpenHelper {
         List<String> folders = new ArrayList<>();
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FOLDER, null);
         cursor.moveToFirst();
+        try {
         do{
             folders.add(cursor.getString(1));
         }while(cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            folders.add("Error database");
+        }
         cursor.close();
         mDatabase.close();
         return folders;
@@ -221,18 +227,22 @@ public class DbHelper extends SQLiteOpenHelper {
         List<String[]> files = new ArrayList<>();
         Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FOLDER, null);
         int count = cursorFolder.getCount();
-        for(int i = 0; i<count; i++){
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_FOLDER + "=" + i, null);
-            String[] fileNamesArray = new String[cursorFile.getCount()];
-            cursorFile.moveToFirst();
-            int j=0;
-            do{
-                fileNamesArray[j] = cursorFile.getString(0);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            files.add(fileNamesArray);
+        try {
+            for (int i = 0; i < count; i++) {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_FOLDER + "=" + i, null);
+                String[] fileNamesArray = new String[cursorFile.getCount()];
+                cursorFile.moveToFirst();
+                int j = 0;
+                do {
+                    fileNamesArray[j] = cursorFile.getString(0);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                files.add(fileNamesArray);
+            }
+        }catch (CursorIndexOutOfBoundsException c){
+            files.add(new String[]{"Error database"});
         }
         cursorFolder.close();
         mDatabase.close();
@@ -241,20 +251,24 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<String[]> getPaths(){
         open();
         List<String[]> path = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FOLDER, null);
-        int count = cursorFolder.getCount();
-        for(int i = 0; i<count; i++){
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_FOLDER + "=" + i, null);
-            String[] pathArray = new String[cursorFile.getCount()];
-            cursorFile.moveToFirst();
-            int j=0;
-            do{
-                pathArray[j] = cursorFile.getString(1);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
+        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM " + TABLE_FOLDER, null);
+        try {
+            int count = cursorFolder.getCount();
+            for (int i = 0; i < count; i++) {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_FOLDER + "=" + i, null);
+                String[] pathArray = new String[cursorFile.getCount()];
+                cursorFile.moveToFirst();
+                int j = 0;
+                do {
+                    pathArray[j] = cursorFile.getString(1);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+            }
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
         }
         cursorFolder.close();
         mDatabase.close();
@@ -263,11 +277,15 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<String> getAlbums(){
         open();
         List<String> albums = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ALBUM, null);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM, null);
         cursor.moveToFirst();
-        do{
-            albums.add(cursor.getString(1));
-        }while(cursor.moveToNext());
+        try {
+            do {
+                albums.add(cursor.getString(1));
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            albums.add("Error database");
+        }
         cursor.close();
         mDatabase.close();
         return albums;
@@ -278,21 +296,25 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ALBUM, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_ALBUM + "=" + count, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
-            int j=1;
-            pathArray[0] = folderTop;
-            do{
-                pathArray[j] = cursorFile.getString(1);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_ALBUM + "=" + count, null);
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
+                int j = 1;
+                pathArray[0] = folderTop;
+                do {
+                    pathArray[j] = cursorFile.getString(1);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -303,21 +325,25 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ALBUM, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_ALBUM + "=" + count, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
-            int j=1;
-            pathArray[0] = folderTop;
-            do{
-                pathArray[j] = cursorFile.getString(0);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_ALBUM + "=" + count, null);
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
+                int j = 1;
+                pathArray[0] = folderTop;
+                do {
+                    pathArray[j] = cursorFile.getString(0);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -327,9 +353,13 @@ public class DbHelper extends SQLiteOpenHelper {
         List<String> artists = new ArrayList<>();
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ARTIST, null);
         cursor.moveToFirst();
-        do{
-            artists.add(cursor.getString(1));
-        }while(cursor.moveToNext());
+        try {
+            do {
+                artists.add(cursor.getString(1));
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            artists.add("Error database");
+        }
         cursor.close();
         mDatabase.close();
         return artists;
@@ -340,21 +370,25 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ARTIST, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_ARTIST + "=" + count, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
-            int j=1;
-            pathArray[0] = folderTop;
-            do{
-                pathArray[j] = cursorFile.getString(1);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_ARTIST + "=" + count, null);
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
+                int j = 1;
+                pathArray[0] = folderTop;
+                do {
+                    pathArray[j] = cursorFile.getString(1);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -365,21 +399,25 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ARTIST, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_ARTIST + "=" + count, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
-            int j=1;
-            pathArray[0] = folderTop;
-            do{
-                pathArray[j] = cursorFile.getString(0);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_ARTIST + "=" + count, null);
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
+                int j = 1;
+                pathArray[0] = folderTop;
+                do {
+                    pathArray[j] = cursorFile.getString(0);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -389,9 +427,13 @@ public class DbHelper extends SQLiteOpenHelper {
         List<String> mainFolders = new ArrayList<>();
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_MAIN_FOLDER, null);
         cursor.moveToFirst();
-        do{
-            mainFolders.add(cursor.getString(1));
-        }while(cursor.moveToNext());
+        try {
+            do {
+                mainFolders.add(cursor.getString(1));
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            mainFolders.add("Error database");
+        }
         cursor.close();
         mDatabase.close();
         return mainFolders;
@@ -402,13 +444,14 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_MAIN_FOLDER, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_MAIN_FOLDER + "=" + count, null);
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_MAIN_FOLDER + "=" + count, null);
 //            Cursor cursorFile11 =  mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE, null);
 //            Cursor cursorFile1 =  mDatabase.rawQuery("SELECT * FROM "+ TABLE_MAIN_FOLDER, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
 //            cursorFile11.moveToFirst();
 //            cursorFile1.moveToFirst();
 //            Log.d("Test", count + " COUNT");
@@ -422,17 +465,20 @@ public class DbHelper extends SQLiteOpenHelper {
 //                Log.d("Test", "MainFolder " + cursorFile1.getInt(0));
 //                Log.d("Test", "MainFolder " + cursorFile1.getString(1));
 //            }while(cursorFile1.moveToNext());
-            int j=1;
-            pathArray[0] = folderTop;
+                int j = 1;
+                pathArray[0] = folderTop;
                 do {
                     pathArray[j] = cursorFile.getString(1);
                     j++;
                 } while (cursorFile.moveToNext());
 
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -443,21 +489,25 @@ public class DbHelper extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_MAIN_FOLDER, null);
         cursor.moveToFirst();
         int count = 1;
-        do{
-            Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE+ " WHERE "
-                    + COLUMN_ID_MAIN_FOLDER + "=" + count, null);
-            String[] pathArray = new String[cursorFile.getCount()+1];
-            cursorFile.moveToFirst();
-            int j=1;
-            pathArray[0] = folderTop;
-            do{
-                pathArray[j] = cursorFile.getString(0);
-                j++;
-            }while (cursorFile.moveToNext());
-            cursorFile.close();
-            path.add(pathArray);
-            count++;
-        }while (cursor.moveToNext());
+        try {
+            do {
+                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
+                        + COLUMN_ID_MAIN_FOLDER + "=" + count, null);
+                String[] pathArray = new String[cursorFile.getCount() + 1];
+                cursorFile.moveToFirst();
+                int j = 1;
+                pathArray[0] = folderTop;
+                do {
+                    pathArray[j] = cursorFile.getString(0);
+                    j++;
+                } while (cursorFile.moveToNext());
+                cursorFile.close();
+                path.add(pathArray);
+                count++;
+            } while (cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            path.add(new String[]{"Error database"});
+        }
         cursor.close();
         mDatabase.close();
         return path;
@@ -488,17 +538,17 @@ public class DbHelper extends SQLiteOpenHelper {
         return lastTime;
     }
 
-    public void setLastPlayListAndTime(List<String> list, int time){
+    public void setLastPlayListAndTime(List<String> list, int time) {
         open();
         mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
         mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE);
         mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
-        for (int i = 0; i<list.size(); i++){
+        for (int i = 0; i < list.size(); i++) {
             ContentValues values = new ContentValues();
             values.put(COLUMN_PATH_PLAY_SERVICE, list.get(i));
-            if(i==0){
+            if (i == 0) {
                 values.put(COLUMN_PLAYED_TIME, time);
-            }else{
+            } else {
                 values.put(COLUMN_PLAYED_TIME, 0);
             }
             mDatabase.insert(
@@ -508,6 +558,8 @@ public class DbHelper extends SQLiteOpenHelper {
         }
         mDatabase.close();
     }
-
-
 }
+
+
+
+

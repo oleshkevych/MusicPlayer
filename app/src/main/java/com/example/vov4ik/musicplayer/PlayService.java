@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -34,19 +33,14 @@ public class PlayService extends Service {
     private static int lastPlayedTime;
     private static MediaPlayer player =  null;
     public static String playingFile;
-//    private AlarmManager manager;
-//    private PendingIntent pendingIntent;
     private static Context context = null;
     private static NotificationManager nm = null;
     private static int color;
-    private static boolean pauseTrigger = true;
     private static boolean checkAPI;
     private static boolean shuffle = false;
+    private static boolean pauseTrigger = false;
     private static boolean nextSong = false;
-    public static final long DOUBLE_CLICK_DELAY = 150;
-    public static long lastPressTime = 0; // oldValue
     public static long myLastPressTime = 0; // oldValue
-    public static long newPressTime = System.currentTimeMillis();
     private static List<String> shufflePath = new ArrayList<>();
     private static Notification notification;
     private static final String CLOSE_ACTION = "com.example.vov4ik.musicplayer.PlayService.close";
@@ -79,6 +73,10 @@ public class PlayService extends Service {
         PlayService.lastPlayedTime = lastPlayedTime;
     }
 
+    public static void setPlayingFile(String playingFile) {
+        PlayService.playingFile = playingFile;
+    }
+
     public static void setPath(List<String> path) {
         PlayService.path = path;
         makeShufflePath();
@@ -107,54 +105,76 @@ public class PlayService extends Service {
     public void onDestroy() {
 
         Log.d("Test", "DESTROY!");
-        AudioManager mAudioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
-        ComponentName mReceiverComponent = new ComponentName(context,HeadphonesClickReceiver.class);
-        mAudioManager.unregisterMediaButtonEventReceiver(mReceiverComponent);
-        context.stopService(new Intent(context, AutoAudioStopper.class));
+        this.stopService(new Intent(this, AutoAudioStopper.class));
         PhoneCallReceiver.stopListener();
         if(player != null) {
             lastPlayedTime = player.getCurrentPosition();
             player.stop();
             player.release();
         }
+        if(isShuffle()){
+            path = shufflePath;
+        }
+        player = null;
         path.remove(playingFile);
         path.add(0, playingFile);
         DbConnector.setLastPlayListAndTime(getApplicationContext(), path, lastPlayedTime);
         nm.cancel(1);
         stopForeground(true);
+        nm.cancelAll();
         super.onDestroy();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-//
+        Log.d("Test", " "+path.toString());
+//        Log.d("test", "intent == "+ intent+" "+flags);
+//        Log.d("test", "intentACTION == "+ intent.getAction());
+        PlayService.nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        PlayService.context = this;
         if(intent!=null&&intent.getAction()!=null) {
             Log.d("test", intent.getAction() + "");
             if (intent.getAction().equals(PLAY_ACTION)) {
+                if(player == null){
+                    AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+                    AutoAudioStopper.getInstance().setAudioManager(am);
+                    AutoAudioStopper.getInstance().setContext(this);
+//                    Log.d("Test", "start with null");
+                }
                 if (!isPlayingNow()) {
+//                    Log.d("Test", "start  play");
                     startPlaying();
                 }else{
+//                    Log.d("Test", "start  pause");
                     pausePlaying();
                 }
                 sendNotification(context);
             } else if (intent.getAction().equals(PREV_ACTION)) {
                 previous();
+                sendNotification(context);
             } else if (intent.getAction().equals(NEXT_ACTION)) {
                 nextSong();
+                sendNotification(context);
             } else if (intent.getAction().equals(CLOSE_ACTION)) {
                 stopSelf();
+                sendNotification(context);
             }
 
             startForeground(1, notification);
         }
         return START_STICKY; //super.onStartCommand(intent, flags, startId);
     }
+    private static void playFile(String filePath){
+        Log.d("Test", " "+playingFile);
+        Log.d("Test", " "+filePath);
 
-    public static void playFile(String filePath){
         if(filePath == null) {
-            addPaths(DbConnector.getLastPlayList(context));
-            PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
-            PlayService.playingFile = path.get(0);
+            try {
+                setPath(DbConnector.getLastPlayList(context));
+                PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
+                PlayService.playingFile = path.get(0);
+            }catch(RuntimeException r){
+            }
         }
         if(player == null){
             player = new MediaPlayer();
@@ -170,28 +190,29 @@ public class PlayService extends Service {
         }
 
         playingFile = filePath;
-
         try {
-            player.setDataSource(filePath);
-            player.setVolume(100, 100);
-            player.prepare();
-            player.seekTo(lastPlayedTime);
+            if (filePath != null) {
+                player.setDataSource(filePath);
+                player.setVolume(100, 100);
+                player.prepare();
+                player.seekTo(lastPlayedTime);
 
-            player.start();
-            pauseTrigger = false;
-            if(!AutoAudioStopper.getInstance().focusOn) {
-                AutoAudioStopper.getInstance().startFocus();
-            }
-            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    nextSong = true;
-                    nextSong();
-
+                player.start();
+                pauseTrigger = false;
+                if (!AutoAudioStopper.getInstance().focusOn) {
+                    AutoAudioStopper.getInstance().startFocus();
                 }
-            });
-            if((context!=null)&&(nm!=null)) {
-                sendNotification(context);
+                player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        nextSong = true;
+                        nextSong();
+
+                    }
+                });
+                if ((context != null) && (nm != null)) {
+                    sendNotification(context);
+                }
             }
         } catch (IOException e1) {
             e1.printStackTrace();
@@ -201,7 +222,7 @@ public class PlayService extends Service {
 
     public static void playFile(String filePath, Context context, NotificationManager nm){
         if(filePath.equals("START")) {
-            addPaths(DbConnector.getLastPlayList(context));
+            setPath(DbConnector.getLastPlayList(context));
             PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
             PlayService.playingFile = path.get(0);
         }else {
@@ -212,6 +233,7 @@ public class PlayService extends Service {
         if((context!=null)&&(nm!=null)) {
             sendNotification(context);
         }
+        timer();
     }
 
     public static void nextSong(){
@@ -222,25 +244,26 @@ public class PlayService extends Service {
         }else{
             path = getPath();
         }
-        if(nextSong){
-            nextSong = false;
-            if ((path.indexOf(playingFile) + 1) < path.size()) {
-                playFile(path.get(path.indexOf(playingFile) + 1));
+        if(path.size()>0) {
+            if (nextSong) {
+                nextSong = false;
+                if ((path.indexOf(playingFile) + 1) < path.size()) {
+                    playFile(path.get(path.indexOf(playingFile) + 1));
+                } else {
+                    playFile(path.get(0));
+                }
+            } else if (isPlayingNow()) {
+                if ((path.indexOf(playingFile) + 1) < path.size()) {
+                    playFile(path.get(path.indexOf(playingFile) + 1));
+                } else {
+                    playFile(path.get(0));
+                }
             } else {
-                playFile(path.get(0));
+                if ((path.indexOf(playingFile) + 1) < path.size()) {
+                    playingFile = path.get(path.indexOf(playingFile) + 1);
+                }
+                sendNotification(context);
             }
-        }else
-        if(isPlayingNow()) {
-            if ((path.indexOf(playingFile) + 1) < path.size()) {
-                playFile(path.get(path.indexOf(playingFile) + 1));
-            } else {
-                playFile(path.get(0));
-            }
-        }else{
-            if ((path.indexOf(playingFile) + 1) < path.size()) {
-                playingFile = path.get(path.indexOf(playingFile) + 1);
-            }
-            sendNotification(context);
         }
     }
 
@@ -333,53 +356,39 @@ public class PlayService extends Service {
         }else{
             path = getPath();
         }
-        if(isPlayingNow()) {
-            if (player.getCurrentPosition() < 10000) {
-                lastPlayedTime = 0;
-                if ((path.indexOf(playingFile) - 1) >= 0) {
-                    playFile(path.get(path.indexOf(playingFile) - 1));
+        if(path.size()>0) {
+            if (isPlayingNow()) {
+                if (player.getCurrentPosition() < 10000) {
+                    lastPlayedTime = 0;
+                    if ((path.indexOf(playingFile) - 1) >= 0) {
+                        playFile(path.get(path.indexOf(playingFile) - 1));
+                    } else {
+                        playFile(path.get(path.size() - 1));
+                    }
                 } else {
-                    playFile(path.get(path.size() - 1));
+                    lastPlayedTime = 0;
+                    playFile(playingFile);
                 }
             } else {
-                lastPlayedTime = 0;
-                playFile(playingFile);
-            }
-        }else{
-            if(lastPlayedTime>10000) {
-                lastPlayedTime = 0;
-            }else{
-                lastPlayedTime = 0;
-                if ((path.indexOf(playingFile) - 1) >= 0) {
-                    playingFile = path.get(path.indexOf(playingFile) - 1);
+                if (lastPlayedTime > 10000) {
+                    lastPlayedTime = 0;
                 } else {
-                    playingFile = path.get(path.size() - 1);
+                    lastPlayedTime = 0;
+                    if ((path.indexOf(playingFile) - 1) >= 0) {
+                        playingFile = path.get(path.indexOf(playingFile) - 1);
+                    } else {
+                        playingFile = path.get(path.size() - 1);
+                    }
                 }
+                sendNotification(context);
             }
-            sendNotification(context);
         }
     }
 
     public static void sendNotification(Context context) {
 
-
-//        String playingFile = PlayService.playingFile;
-//        Log.d("test", playingFile + " NOTIF");
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         String allTitle = trekName();
-//        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-//        mmr.setDataSource(playingFile);
-//        String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-//        String artist  = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-//        if ((title==null)||(title.equals(""))||(artist == null) || (artist.equals(""))||
-//                (title.equals(" "))||(artist.equals(" "))) {
-////            artist = new File(playingFile).getName();
-//            allTitle = new File(playingFile).getName();
-//        }else {
-//            allTitle = artist+" - "+title;
-//        }
-//        mmr.release();
-
         builder
 //                .setContentTitle("Player")
 //                .setColor(color)
@@ -431,7 +440,6 @@ public class PlayService extends Service {
         nextIntent.setAction(NEXT_ACTION);
         PendingIntent pnextIntent = PendingIntent.getService(context, 0,
                 nextIntent, 0);
-
 //        Intent openIntent = new Intent(context, MainActivity.class);
 ////        openIntent.setAction(OPEN_ACTION);
 ////        openIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -458,22 +466,22 @@ public class PlayService extends Service {
 
     public static Bitmap getImage(){
         Bitmap image;
-        try {
-            MediaMetadataRetriever mData = new MediaMetadataRetriever();
-            mData.setDataSource(playingFile);
             try {
-                byte art[] = mData.getEmbeddedPicture();
-                image = BitmapFactory.decodeByteArray(art, 0, art.length);
-            } catch (Exception e) {
+                MediaMetadataRetriever mData = new MediaMetadataRetriever();
+                mData.setDataSource(playingFile);
+                try {
+                    byte art[] = mData.getEmbeddedPicture();
+                    image = BitmapFactory.decodeByteArray(art, 0, art.length);
+                } catch (Exception e) {
+                    image = null;
+                }
+
+                mData.release();
+            } catch (IllegalArgumentException e) {
                 image = null;
             }
-            mData.release();
-        }catch(IllegalArgumentException e){
-            image = null;
-        }
         return image;
     }
-
 
     private static void makeShufflePath(){
         PlayService.shufflePath = new ArrayList<>();
@@ -507,15 +515,18 @@ public class PlayService extends Service {
                     new Runnable() {
                         @Override
                         public void run() {
-                            int incr;
-                            for (incr = 0; incr <= 300000; incr += 1000) {
-                                if (isPlayingNow()) {
+                            int incr=0;
+                            while(true) {
+                                Log.d("Test", "Service "+playingFile);
+                                if (isPlayingNow()||player==null) {
                                     break;
-                                } else if (incr == 300000 || context == null) {
+                                } else if (incr == 300000) {
                                     stopService();
+                                    incr = 0;
                                 }
+                                incr+=1000;
                                 try {
-                                    Thread.sleep(1000);
+                                    Thread.sleep(500);
                                 } catch (InterruptedException e) {
                                     Log.d("Test", "sleep failure");
                                 }

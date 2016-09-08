@@ -118,6 +118,12 @@
             <TextView
                 android:id="@+id/trek_name_main_activity"
                 android:textColor="@color/colorPrimaryBlack"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit ="marquee_forever"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollHorizontally="true"
                 android:textAlignment="center"
                 android:textSize="17sp"
                 android:layout_width="match_parent"

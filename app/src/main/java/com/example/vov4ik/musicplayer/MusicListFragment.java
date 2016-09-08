@@ -29,6 +29,13 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
     {
         return getMusicItemsList().getSelectedPaths();
     }
+    public List<String> getSelectedPlaylist()
+    {
+        return getMusicItemsList().getSelectedPlaylist();
+    }
+    public int getNumberOfPlaylist() {
+        return getMusicItemsList().getNumberOfPlaylist();
+    }
 
     public boolean isFolderTrigger() {
         return getMusicItemsList().isFolderTrigger();
@@ -36,6 +43,19 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
 
     public void setFolderTrigger(boolean folderTrigger) {
         getMusicItemsList().setFolderTrigger(folderTrigger);
+    }
+
+    public void reloadForPlaylist(){
+        getMusicItemsList().setPlaylistChanges(true);
+        getMusicItemsList().setCheckingTrigger(false);
+        getMusicItemsList().setFolderName(DbConnector.getPlaylist(getMusicItemsList().getContext()));
+        getMusicItemsList().setPathPlaylist(DbConnector.getPlaylistFiles(getMusicItemsList().getContext()));
+        show(getMusicItemsList().getFolderName());
+        getMusicItemsList().setCheckedList(new ArrayList<String>());
+        getMusicItemsList().setNewSelectedPaths(new ArrayList<String>());
+        getMusicItemsList().setSelectedPlaylist(new ArrayList<String>());
+        getMusicItemsList().setSelectedPlaylist(new ArrayList<String>());
+        getMusicItemsList().setNumberOfPlaylist(0);
     }
 
     public void unselectMusicItems()
@@ -51,12 +71,12 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
         }
         getMusicItemsList().setCheckedList(new ArrayList<String>());
         getMusicItemsList().setNewSelectedPaths(new ArrayList<String>());
+        getMusicItemsList().setSelectedPlaylist(new ArrayList<String>());
     }
 
     protected abstract MusicItemsList getMusicItemsList();
 
     public void show(List<String> list){
-        //linearLayout = getMusicItemsList().getLinearLayout(); // TODO: Refactor this
         getMusicItemsList().getLinearLayout().removeAllViews();
         for (String s : list) {
             TextView text = new TextView(getMusicItemsList().getLinearLayout().getContext());
@@ -82,7 +102,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
                 show(getMusicItemsList().getFolderName());
                 getMusicItemsList().setFolderTrigger(false);
             } else {
-                Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                Intent intent = new Intent(getContext(), PlayerActivity.class);
                 intent.putExtra(EXTRA_FOR_CLICKED_FILE, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[(v.getId())]);
                 intent.putExtra(EXTRA_FOR_PATHS, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()));
                 startActivity(intent);
@@ -127,21 +147,26 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
     @Override
     public boolean onLongClick(View v) {
 //        Log.d("Test",(v.getId()==0)+" "+
-        if(!((v.getId()==0)&&(getMusicItemsList().isFolderTrigger()))) {
-            getMusicItemsList().setCheckingTrigger(true);
-            v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
-            v.setTag("checked");
-            List<String> l =  getMusicItemsList().getCheckedList();
-            l.add(String.valueOf(v.getId()));
-            getMusicItemsList().setCheckedList(l);
-            if ((!getMusicItemsList().isFolderTrigger())) {
-                for (int i = 1; i< getMusicItemsList().getPath().get(v.getId()).length; i++) {
-                    getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(v.getId())[i]);
+        try {
+            if (!((v.getId() == 0) && (getMusicItemsList().isFolderTrigger()))) {
+                getMusicItemsList().setCheckingTrigger(true);
+                v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                v.setTag("checked");
+                List<String> l = getMusicItemsList().getCheckedList();
+                l.add(String.valueOf(v.getId()));
+                getMusicItemsList().setCheckedList(l);
+                if ((!getMusicItemsList().isFolderTrigger())) {
+                    for (int i = 1; i < getMusicItemsList().getPath().get(v.getId()).length; i++) {
+                        getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(v.getId())[i]);
+                    }
+                } else if (v.getId() != 0) {
+                    getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[v.getId()]);
                 }
-            } else if (v.getId() != 0) {
-                getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[v.getId()]);
             }
+            return true;
+        }catch(IllegalStateException il){
+            return true;
         }
-        return true;
     }
+
 }

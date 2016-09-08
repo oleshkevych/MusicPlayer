@@ -1,9 +1,11 @@
 package com.example.vov4ik.musicplayer;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -38,13 +41,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     final static String EXTRA_FOR_CLICKED_FILE = "extra for clicked file";
     final static String EXTRA_FOR_PATHS = "extra for paths";
-    private List<String> path = new ArrayList<>();
+    final static String EXTRA_FOR_FILES = "extra for files";
+    protected List<String> path = new ArrayList<>();
     private List<String> musicFilesName = new ArrayList<>();
     private String clickedFile;
-    private String playingNow;
+    private String playingNow = "n";
     private AsyncTask async;
-    private boolean asyncStop = false;
-
+    private static boolean asyncStop = false;
 
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
@@ -54,76 +57,220 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     private boolean checkingTrigger = false;
     private boolean background = false;
     private boolean allChecked = false;
+    private boolean prevBackground = false;
+    int counter = 0;
 
-    public void setPath(List<String> newPath){
+    public  void addMusicFilesName(String musicFilesName) {
+        this.musicFilesName.add(musicFilesName);
+    }
+    public void addMusicFilesName(int i,String musicFilesName) {
+        this.musicFilesName.add(i,musicFilesName);
+    }
+
+    public void setPath(List<String> newPath, List<String> newNames){
         //Add paths from Service if it is working
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        for(String s: newPath) {
-            Log.d("Test", "LOOP " + s);
-            File f = new File(s);
-            if(!f.isDirectory()) {
-                path.add(s);
-                String title;
-                try {
-                    mmr.setDataSource(f.getPath());
-                    title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-                 }catch(IllegalArgumentException e) {
-                    title = "Refresh the Database";
+        for(int i = 0; i<newPath.size(); i++) {
+            path.add(newPath.get(i));
+        }
+//        counter = path.indexOf(PlayService.playingFile);
+//        if(path.size()>70) {
+//            if (counter > 15) {
+//                counter = counter - 15;
+//            }
+//        }else{
+//            counter = 0;
+//        }
+        if (newNames.size() == 0) {
+            for (int i = 0; i < newPath.size(); i++) {//(int i = counter; i<newPath.size()&&i<counter+30; i++) {
+                File f = new File(newPath.get(i));
+                if (!f.isDirectory()) {
+                    String title;
+                    try {
+                        mmr.setDataSource(f.getPath());
+                        title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+                    } catch (IllegalArgumentException e) {
+                        title = "Refresh the Database";
+                    }
+                    if ((title == null) || (title.equals("")) || (title.equals("Refresh the Database!"))) {
+                        addMusicFilesName(f.getName());
+                    } else {
+                        addMusicFilesName(title);
+                    }
                 }
-                if ((title == null) || (title.equals(""))||(title.equals("Refresh the Database!"))) {
-                    musicFilesName.add(f.getName());
-                } else {
-                    musicFilesName.add(title);
-                }
+            }
+        }else{
+            for(int i = 0; i<newPath.size(); i++) {
+                addMusicFilesName(newNames.get(i));
             }
         }
         mmr.release();
     }
 
+    private class FetchTaskForPathName extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                    if(counter!=0) {
+                        for (int i = 0; i < counter; i++) {
+                            File f = new File(path.get(i));
+                            if (!f.isDirectory()) {
+                                String title;
+                                try {
+                                    mmr.setDataSource(f.getPath());
+                                    title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+                                } catch (IllegalArgumentException e) {
+                                    title = "Refresh the Database";
+                                }
+                                if ((title == null) || (title.equals("")) || (title.equals("Refresh the Database!"))) {
+                                    addMusicFilesName(i, f.getName());
+                                } else {
+                                    addMusicFilesName(i, title);
+                                }
+                            }
+                        }
+                        Log.d("Test", musicFilesName.size()+"");
+//                        addFirstViews(counter);
+                    }
+                    if(counter+30>path.size()) {
+                        for (int i = counter + 30; i < path.size(); i++) {
+                            File f = new File(path.get(i));
+                            if (!f.isDirectory()) {
+                                String title;
+                                try {
+                                    mmr.setDataSource(f.getPath());
+                                    title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+                                } catch (IllegalArgumentException e) {
+                                    title = "Refresh the Database";
+                                }
+                                if ((title == null) || (title.equals("")) || (title.equals("Refresh the Database!"))) {
+                                    addMusicFilesName(f.getName());
+                                } else {
+                                    addMusicFilesName(title);
+                                }
+                            }
+                        }
+//                        addLastViews(counter+30);
+                    }
+                    mmr.release();
+                }
+            });
+            return null;
+        }
+    }
+
+    private void addFirstViews(int counter){
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutPlayer);
+        assert linearLayout!=null;
+        Drawable backgroundForAll;
+        if(background){
+            backgroundForAll = getResources().getDrawable(R.drawable.background_if_this_is_prasent);
+        }else{
+            backgroundForAll = null;
+        }
+        for (int i =0; i<counter; i++) {
+            TextView text = new TextView(linearLayout.getContext());
+            text.setText(musicFilesName.get(i));
+            text.setId(i);
+            linearLayout.addView(text, i);
+            text.setOnClickListener(this);
+            text.setOnLongClickListener(this);
+            text.setPadding(30, 10, 20, 10);
+            text.setTextSize(16);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(0, 15, 0, 15);
+            text.setBackground(backgroundForAll);
+        }
+
+    }
+    private void addLastViews(int counter){
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutPlayer);
+        assert linearLayout!=null;
+        Drawable backgroundForAll;
+        if(background){
+            backgroundForAll = getResources().getDrawable(R.drawable.background_if_this_is_prasent);
+        }else{
+            backgroundForAll = null;
+        }
+        for (int i = counter; i<musicFilesName.size(); i++) {
+            TextView text = new TextView(linearLayout.getContext());
+            text.setText(musicFilesName.get(i));
+            text.setId(i);
+            linearLayout.addView(text, i);
+            text.setOnClickListener(this);
+            text.setOnLongClickListener(this);
+            text.setPadding(30, 10, 20, 10);
+            text.setTextSize(16);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(0, 15, 0, 15);
+            text.setBackground(backgroundForAll);
+        }
+
+    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        asyncStop = true;
         setContentView(R.layout.activity_player);
-
         mContentView = findViewById(R.id.fullscreen_content);
         Intent intent = getIntent();
-        Log.d("Test", "Player " + Arrays.toString(intent.getStringArrayExtra(EXTRA_FOR_PATHS)));
         List<String> newPathList = new ArrayList<String>();
+        List<String> newFileList = new ArrayList<String>();
         if((intent.getStringArrayExtra(EXTRA_FOR_PATHS))!=null) {
-            newPathList = new ArrayList<String>(Arrays.asList(intent.getStringArrayExtra(EXTRA_FOR_PATHS)));
+            List<String> newPathList1 = new ArrayList<String>(Arrays.asList(intent.getStringArrayExtra(EXTRA_FOR_PATHS)));
 
-            for (int i = 0; i < newPathList.size(); i++) {
-                if (newPathList.get(i).equals("..GoToRoot")) {
-                    newPathList.remove(i);
+            for (int i = 0; i < newPathList1.size(); i++) {
+                File f = new File(newPathList1.get(i));
+                if (!f.isDirectory()&&(!newPathList1.get(i).equals("..GoToRoot"))) {
+                    newPathList.add(newPathList1.get(i));
                 }
             }
+            if((intent.getStringArrayExtra(EXTRA_FOR_FILES))!=null){
+                List<String> newFileList1 = new ArrayList<String>(Arrays.asList(intent.getStringArrayExtra(EXTRA_FOR_FILES)));
 
+                for (int i = 0; i < newFileList1.size(); i++) {
+                    if ((!newFileList1.get(i).equals("..GoToRoot"))) {
+                        newFileList.add(newFileList1.get(i));
+                    }
+                }
+            }
             clickedFile = intent.getStringExtra(EXTRA_FOR_CLICKED_FILE);
 
-        if(clickedFile.equals("ADD")) {
-            setPath(PlayService.getPath());
-            PlayService.addPaths(newPathList);
-        }else{
-            PlayService.setLastPlayedTime(0);
-            PlayService.playFile(clickedFile);
-            PlayService.setPath(newPathList);
-        }
-            setPath(newPathList);
+            if(clickedFile.equals("ADD")) {
+                PlayService.addPaths(newPathList);
+                if(PlayService.isShuffle()){
+                    setPath(PlayService.getShufflePath(), new ArrayList<String>());
+                }else {
+                    setPath(PlayService.getPath(), new ArrayList<String>());
+                }
+            }else{
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.setLastPlayedTime(0);
+                    PlayService.setPlayingFile(clickedFile);
+                    PlayService.startPlaying();
+                } else {
+                    Intent intent1 = new Intent(this, PlayService.class);
+                    startService(intent1);
+                    PlayService.setLastPlayedTime(0);
+                    PlayService.setPlayingFile(clickedFile);
+                    PlayService.startPlaying();
+                }
+                PlayService.setPath(newPathList);
+                setPath(newPathList, newFileList);
+            }
         }else {
             if(PlayService.isShuffle()){
-                setPath(PlayService.getShufflePath());
+                setPath(PlayService.getShufflePath(), new ArrayList<String>());
             }else {
-                setPath(PlayService.getPath());
+                setPath(PlayService.getPath(), new ArrayList<String>());
             }
         }
         showViews();
-///-------------
-
-
-
 
         int[] ID = new int[]{0, R.id.layoutForButton2,R.id.layoutForButton3,R.id.layoutForButton4,R.id.layoutForButton5};
         final LinearLayout[] l= new LinearLayout[5];
@@ -146,14 +293,18 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             public void onClick(View v) {
                 l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(!PlayService.isPlayingNow()){
-                    PlayService.startPlaying();
+                    if(PlayService.getPlayer()!=null) {
+                        PlayService.startPlaying();
+                    } else {
+                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                        intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+                        getApplicationContext().startService(intent1);
+                    }
                 }else{
                     PlayService.pausePlaying();
                 }
                 buttonChanger();
                 progressWriter();
-                showViews();
-
             }
         });
         Button nextButton = (Button) findViewById(R.id.nextButton);
@@ -169,7 +320,13 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(View v) {
                 l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                PlayService.nextSong();
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.nextSong();
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
+                    getApplicationContext().startService(intent1);
+                }
                 progressWriter();
 
 
@@ -188,12 +345,18 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(View v) {
                 l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                PlayService.previous();
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.previous();
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
+                    getApplicationContext().startService(intent1);
+                }
                 progressWriter();
 
             }
         });
-        final Button shuffle = (Button) findViewById(R.id.shuffle);
+        final Button shuffle = (Button) findViewById(R.id.shuffle_player_activity);
         assert shuffle != null;
         if(PlayService.isShuffle()){
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
@@ -214,12 +377,15 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 if (PlayService.isShuffle()) {
                     PlayService.setShuffle(false);
                     shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
+                    path = new ArrayList<String>();
+                    musicFilesName = new ArrayList<String>();
+                    setPath(PlayService.getPath(), new ArrayList<String>());
                 } else {
-                    PlayService.setPath(path);
                     PlayService.setShuffle(true);
                     musicFilesName = new ArrayList<String>();
                     path = new ArrayList<String>();
-                    setPath(PlayService.getShufflePath());
+                    musicFilesName = new ArrayList<String>();
+                    setPath(PlayService.getShufflePath(), new ArrayList<String>());
                     shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
                 }
                 showViews();
@@ -256,14 +422,19 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             public void onStopTrackingTouch(SeekBar seekBar) {
                 asyncStop = false;
                 async = new FetchTask().execute();
-                PlayService.setLastPlayedTime(progressChanged);
-                if (PlayService.isPlayingNow()) {
-                    PlayService.startPlaying();
+                if (PlayService.getPlayer() != null) {
+                    PlayService.setLastPlayedTime(progressChanged);
+                    if (PlayService.isPlayingNow()) {
+                        PlayService.startPlaying();
+                    }
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    getApplicationContext().startService(intent1);
+                    PlayService.setLastPlayedTime(progressChanged);
                 }
             }
         });
-        progressWriter();
-        async = new FetchTask().execute();
+
 
         final Button checkAllButton = (Button) findViewById(R.id.checkAll);
         assert checkAllButton != null;
@@ -289,15 +460,26 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(View v) {
 
-                List<String> newPath = new ArrayList<String>();
-                path.removeAll(removeItemList);
-                newPath = path;
-                path = new ArrayList<String>();
-                musicFilesName = new ArrayList<String>();
-                setPath(newPath);
+                checkingTrigger = false;
+//                List<String> newPath = new ArrayList<String>();
+//                List<String> newNames = new ArrayList<String>();
+                for(String s: removeItemList) {
+                    musicFilesName.remove(path.indexOf(s));
+                    path.remove(s);
+                }
+//                newPath = path;
+//                newNames = musicFilesName;
+//                path = new ArrayList<String>();
+//                musicFilesName = new ArrayList<String>();
+//                setPath(newPath, new ArrayList<String>(););
                 showViews();
                 PlayService.setPath(path);
-
+                final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInPLayerActivity);
+                assert linearLayout != null;
+                linearLayout.setVisibility(ViewPager.INVISIBLE);
+                ScrollView pager = (ScrollView) findViewById(R.id.fullscreen_content);
+                assert pager != null;
+                pager.setVisibility(View.VISIBLE);
                 removeItemList = new ArrayList<String>();
             }
         });
@@ -316,17 +498,27 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                     assert linearLayout != null;
                     linearLayout.setVisibility(LinearLayout.VISIBLE);
                     playlistList.add("+Add Playlist");
-                    //list.addAll(DbConnector.getPlaylists(getApplicationContext));
+                    playlistList.addAll(DbConnector.getPlaylist(getApplicationContext()));
                     showPlaylistView();
                 }
             }
         });
+        asyncStop = false;
+        progressWriter();
+        async = new FetchTask().execute();
+
     }
 
     private void showPlaylistView(){
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.showPlaylistLayoutInPLayerActivity);
         assert linearLayout != null;
         linearLayout.removeAllViews();
+        Drawable backgroundForAll;
+        if(background){
+            backgroundForAll = getResources().getDrawable(R.drawable.background_if_this_is_prasent);
+        }else{
+            backgroundForAll = null;
+        }
         for (String s : playlistList) {
             TextView text = new TextView(linearLayout.getContext());
             text.setText(String.valueOf(s));
@@ -335,6 +527,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             text.setOnClickListener(this);
             text.setPadding(20, 10, 20, 10);
             text.setTextSize(18);
+            text.setBackground(backgroundForAll);
             ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
             mlp.setMargins(40, 15, 0, 15);
         }
@@ -396,26 +589,35 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             main.setBackgroundColor(getResources().getColor(R.color.colorMainBackgroundForPlayerActivity));
         }
     }
+
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             Thread t = new Thread(){
-                int i = 0;
+                int i = 0, j = 0;
                 @Override
                 public void run() {
                     try {
-
-                        while (!isInterrupted()&&!asyncStop) {
+                        while (!isInterrupted()&&!asyncStop&&playingNow!=null) {
                             Thread.sleep(500);
                             runOnUiThread(new Runnable() {
+
                                 @Override
                                 public void run() {
-                                    if(!playingNow.equals(PlayService.playingFile)){
-                                        backgroundWriter();
-                                        showViews();
-                                    }
+//                                    if(musicFilesName.size()<path.size()){
+//                                        new FetchTaskForPathName().execute();
+//                                    }
                                     if(PlayService.isPlayingNow()) {
                                         progressWriter();
+                                        if (!playingNow.equals(PlayService.playingFile)) {
+                                            backgroundWriter();
+                                            j++;
+                                            refreshViews(playingNow);
+                                        }
+                                    }else{
+                                        if (playingNow.equals(PlayService.playingFile)) {
+                                            refreshViews(playingNow);
+                                        }
                                     }
                                     if(i==4){
                                         delayedHide(50);
@@ -437,6 +639,57 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
+    public boolean refreshViews(String previous) {
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutPlayer);
+        assert linearLayout != null;
+        if (PlayService.isPlayingNow()) {
+            playingNow = PlayService.playingFile;
+        } else {
+            playingNow = "non";
+        }
+        if (background != prevBackground) {
+            showViews();
+            return true;
+        }
+        Drawable backgroundForAll;
+        if(background){
+            backgroundForAll = getResources().getDrawable(R.drawable.background_if_this_is_prasent);
+        }else{
+            backgroundForAll = null;
+        }
+        try {
+            TextView text = (TextView) linearLayout.findViewById(path.indexOf(previous));
+            text.setPadding(30, 10, 20, 10);
+            text.setTextSize(16);
+            text.setBackground(null);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(0, 15, 0, 15);
+            text.setBackground(backgroundForAll);
+        } catch (RuntimeException r) {
+//            playingNow = "non";
+        }
+        if (PlayService.isPlayingNow()) {
+            try {
+                TextView text1 = (TextView) linearLayout.findViewById(path.indexOf(playingNow));
+                text1.setPadding(80, 10, 20, 10);
+                text1.setTextSize(18);
+                text1.setBackground(getResources().getDrawable(R.drawable.playing_background));
+                ViewGroup.MarginLayoutParams mlp1 = (ViewGroup.MarginLayoutParams) text1.getLayoutParams();
+                mlp1.setMargins(40, 15, 0, 15);
+            } catch (RuntimeException r) {
+//                playingNow = "non";
+            }
+        }
+        if (checkingTrigger) {
+            for (String s : removeItemList) {
+                View text1 = linearLayout.findViewById(path.indexOf(s));
+                text1.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                text1.setTag("checked");
+            }
+        }
+        return true;
+    }
+
     @Override
     protected void onResume(){
         super.onResume();
@@ -456,45 +709,59 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
-
-
-
-///-----------------
-
-
     public void showViews(){
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.layoutPlayer);
         assert linearLayout != null;
         linearLayout.removeAllViews();
-        playingNow = PlayService.playingFile;
+        if(PlayService.isPlayingNow()) {
+            playingNow = PlayService.playingFile;
+        }else{
+            playingNow = "non";
+        }
+        Drawable backgroundForAll;
+        if(background){
+            backgroundForAll = getResources().getDrawable(R.drawable.background_if_this_is_prasent);
+        }else{
+            backgroundForAll = null;
+        }
+        prevBackground = background;
+        int i = 0;
         for (String s : musicFilesName) {
             TextView text = new TextView(linearLayout.getContext());
-            text.setText(String.valueOf(s));
-            text.setId((musicFilesName).indexOf(s));
+            text.setText(s);
+            text.setId(i);
             linearLayout.addView(text);
             text.setOnClickListener(this);
             text.setOnLongClickListener(this);
 
-            if (PlayService.isPlayingNow() && path.get((musicFilesName).indexOf(s)).equals(playingNow)) {
+            text.setPadding(30, 10, 20, 10);
+            text.setTextSize(16);
+            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
+            mlp.setMargins(0, 15, 0, 15);
+            text.setBackground(backgroundForAll);
+            i++;
+        }
+        if(checkingTrigger){
+            for(String s:removeItemList) {
+                View text = linearLayout.findViewById(path.indexOf(s));
+                text.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
+                text.setTag("checked");
+            }
+        }
+//        Log.d("Test", playingNow+" "+path.indexOf(playingNow)+" "+linearLayout.getChildCount());
+        if (PlayService.isPlayingNow()){
+            try {
+                TextView text = (TextView) linearLayout.findViewById(path.indexOf(playingNow));
                 text.setPadding(80, 10, 20, 10);
                 text.setTextSize(18);
                 text.setBackground(getResources().getDrawable(R.drawable.playing_background));
                 ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
                 mlp.setMargins(40, 15, 0, 15);
-            }else {
-                text.setPadding(30, 10, 20, 10);
-                text.setTextSize(16);
-                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) text.getLayoutParams();
-                mlp.setMargins(0, 15, 0, 15);
-            }
-            if(background&&!(PlayService.isPlayingNow() && path.get((musicFilesName).indexOf(s)).equals(playingNow))){
-                text.setBackground(getResources().getDrawable(R.drawable.background_if_this_is_prasent));
-            }
-            if(checkingTrigger&&removeItemList.contains(path.get((musicFilesName).indexOf(s)))){
-                text.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
-                text.setTag("checked");
+            }catch (RuntimeException r){
+                playingNow = "non";
             }
         }
+
     }
     @Override
     public void onClick(View v) {
@@ -515,11 +782,21 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             } else {
                 clickedFile = path.get(v.getId());
                 PlayService.setLastPlayedTime(0);
-                PlayService.playFile(clickedFile);
-                showViews();
+                PlayService.setPlayingFile(clickedFile);
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.startPlaying();
+                } else {
+                    Intent intent1 = new Intent(this, PlayService.class);
+                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+                    startService(intent1);
+                }
+//                showViews();
             }
         }else{
-            if(v.getId()==0){
+            if(v.getId()==0 || playlistList.get(v.getId()).equals("No Playlists available")){
+                if(playlistList.contains("No Playlists available")){
+                    playlistList.remove("No Playlists available");
+                }
                 final LinearLayout inputLayout = (LinearLayout)findViewById(R.id.inputLayoutInPLayerActivity);
                 assert inputLayout != null;
                 inputLayout.setVisibility(View.VISIBLE);
@@ -530,15 +807,21 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 addButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        PlayerActivity.playlistList.add(editText.getText().toString());
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        if(PlayerActivity.playlistList.contains(editText.getText().toString())){
+                            Toast.makeText(getApplicationContext(), "This name exist!!", Toast.LENGTH_SHORT).show();
+                        }else {
+                            PlayerActivity.playlistList.add(editText.getText().toString());
+
+                        }
                         inputLayout.setVisibility(View.GONE);
                         showPlaylistView();
-                        editText.setText("");
                     }
                 });
 
             }else {
-                //DbConnector.setPlaylist(getApplicationContext(), removeItemList, list.get(v.getId());
+                DbConnector.setPlaylist(getApplicationContext(), playlistList.get(v.getId()), removeItemList);
                 ScrollView pager = (ScrollView) findViewById(R.id.fullscreen_content);
                 assert pager != null;
                 pager.setVisibility(View.VISIBLE);
@@ -562,6 +845,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     protected void onDestroy() {
+        asyncStop = true;
         async.cancel(true);
         super.onDestroy();
     }
@@ -593,12 +877,11 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             checkingTrigger = false;
             showViews();
             removeItemList = new ArrayList<String>();
-        }else
-        super.onBackPressed();
+        }else {
+            finish();
+            super.onBackPressed();
+        }
     }
-
-
-
 
 
     ////FULL SCREEN METHODS
@@ -628,14 +911,12 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                     | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
-
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
             hide();
         }
     };
-
     private void hide() {
         // Hide UI first
         ActionBar actionBar = getSupportActionBar();

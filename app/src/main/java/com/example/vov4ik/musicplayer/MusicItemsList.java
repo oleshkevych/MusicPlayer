@@ -1,5 +1,7 @@
 package com.example.vov4ik.musicplayer;
 
+import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -21,7 +23,68 @@ public class MusicItemsList {
     private List<String[]> musicFiles = null;
     private boolean folderTrigger = false;
     private int numberOfFolder;
+    private List<String> selectedPlaylist = new ArrayList<String>();
+    private int numberOfPlaylist=0;
+    private List<List<String>> pathPlaylist = null;
+    private boolean playlistChanges = false;
+    private List<List<String>> namePlaylist = null;
+    private Context context;
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public boolean isPlaylistChanges() {
+        return playlistChanges;
+    }
+
+    public void setPlaylistChanges(boolean playlistChanges) {
+        this.playlistChanges = playlistChanges;
+    }
+
+    public List<List<String>> getNamePlaylist() {
+        return namePlaylist;
+    }
+
+    public void setNamePlaylist(List<List<String>> namePlaylist) {
+        this.namePlaylist = namePlaylist;
+    }
+
+    public List<List<String>> getPathPlaylist() {
+        return pathPlaylist;
+    }
+
+    public void setPathPlaylist(List<List<String>> pathPlaylist) {
+        Log.d("Test", "this" + pathPlaylist.size());
+        this.pathPlaylist = pathPlaylist;
+    }
+
+    public List<String> getSelectedPlaylist() {
+        return selectedPlaylist;
+    }
+
+    public int getNumberOfPlaylist() {
+        return numberOfPlaylist;
+    }
+
+    public void setNumberOfPlaylist(int numberOfPlaylist) {
+        this.numberOfPlaylist = numberOfPlaylist;
+    }
+
+    public void setSelectedPlaylist(List<String> selectedPlaylist) {
+        this.selectedPlaylist = selectedPlaylist;
+    }
+    public void addSelectedPlaylist(String selectedPlaylist) {
+        this.selectedPlaylist.add(selectedPlaylist);
+    }
+
+    public void removeSelectedPlaylist(String selectedPlaylist) {
+        this.selectedPlaylist.remove(selectedPlaylist);
+    }
 
     public List<String[]> getPath() {
         return path;

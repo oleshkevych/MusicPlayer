@@ -13,5 +13,9 @@ public interface ISelectableFragment {
     List<String> getPreviousList();
     void setFolderTrigger(boolean folderTrigger);
     boolean isFolderTrigger();
+    List<String> getSelectedPlaylist();
+    int getNumberOfPlaylist();
+    void reloadForPlaylist();
+
 
 }

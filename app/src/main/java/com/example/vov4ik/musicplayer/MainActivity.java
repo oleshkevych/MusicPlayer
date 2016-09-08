@@ -1,10 +1,8 @@
 package com.example.vov4ik.musicplayer;
 
-import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.LabeledIntent;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +16,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -34,7 +33,7 @@ import java.util.List;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
@@ -47,8 +46,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AsyncTask async;
     private boolean asyncStop = false;
     public static List<String> playlistList = new ArrayList<>();
+    private static Context mContext;
 
-
+    public static Context getmContext() {
+        return mContext;
+    }
 
     public static Boolean getExecuteTrigger() {
         return executeTrigger;
@@ -62,10 +64,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        MainActivity.mContext = getApplicationContext();
         setContentView(R.layout.activity_main);
         if(PlayService.getPlayer()==null) {
-            Intent intent2 = new Intent(this, NotificationClass.class);
-            startService(intent2);
             Intent intent = new Intent(this, PlayService.class);
             startService(intent);
             Intent intent1 = new Intent(this, AutoAudioStopper.class);
@@ -78,15 +79,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ComponentName mReceiverComponent = new ComponentName(this, HeadphonesClickReceiver.class);
             am.registerMediaButtonEventReceiver(mReceiverComponent);
         }
-        if(!PlayService.isPlayingNow()) {
-            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            PlayService.playFile("START", getApplicationContext(), nm);
-        }
+//        if(!PlayService.isPlayingNow()) {
+//            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//            PlayService.playFile("START", getApplicationContext(), nm);
+//        }
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         String[] listOfMods = {"Album","Artist",  "Folder(All Content)", "Folder","Playlist"};
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        assert tabLayout != null;
         for (String s: listOfMods) {
             tabLayout.addTab(tabLayout.newTab().setText(s));
         }
@@ -138,7 +142,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View v) {
                 l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(!PlayService.isPlayingNow()){
-                    PlayService.startPlaying();
+                    if(PlayService.getPlayer()!=null) {
+                        PlayService.startPlaying();
+
+                    } else {
+                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                        intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+                        getApplicationContext().startService(intent1);
+                    }
                 }else{
                     PlayService.pausePlaying();
                 }
@@ -160,7 +171,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                PlayService.nextSong();
+                if(PlayService.getPlayer()!=null) {
+                        PlayService.nextSong();
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
+                    getApplicationContext().startService(intent1);
+                }
                 progressWriter();
 
 
@@ -179,7 +196,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                PlayService.previous();
+                if(PlayService.getPlayer()!=null) {
+
+                        PlayService.previous();
+
+                } else {
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
+                    getApplicationContext().startService(intent1);
+                }
                 progressWriter();
 
             }
@@ -258,9 +283,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onStopTrackingTouch(SeekBar seekBar) {
                 asyncStop = false;
                 async = new FetchTask().execute();
-                PlayService.setLastPlayedTime(progressChanged);
-                if(PlayService.isPlayingNow()) {
-                    PlayService.startPlaying();
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.setLastPlayedTime(progressChanged);
+                    if(PlayService.isPlayingNow()) {
+                        PlayService.startPlaying();
+                    }
+                } else{
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    getApplicationContext().startService(intent1);
+                    PlayService.setLastPlayedTime(progressChanged);
                 }
             }
         });
@@ -292,7 +323,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         seekBar.setMax(dur);
         seekBar.setProgress(cur);
         seekBar.setSecondaryProgress(dur);
-
     }
 
     @Override
@@ -300,7 +330,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInMainActivity);
         assert linearLayout != null;
         final ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
-        if(v.getId()==0){
+        if(v.getId()==0 || playlistList.get(v.getId()).equals("No Playlists available")){
+            if(playlistList.contains("No Playlists available")){
+                playlistList.remove("No Playlists available");
+            }
             final LinearLayout inputLayout = (LinearLayout)findViewById(R.id.inputLayout);
             assert inputLayout != null;
             inputLayout.setVisibility(View.VISIBLE);
@@ -311,15 +344,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    MainActivity.playlistList.add(editText.getText().toString());
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    if(MainActivity.playlistList.contains(editText.getText().toString())){
+                        Toast.makeText(getApplicationContext(), "This name exist!!", Toast.LENGTH_SHORT).show();
+                    }else {
+                        MainActivity.playlistList.add(editText.getText().toString());
+                        editText.setText("");
+                    }
                     inputLayout.setVisibility(View.GONE);
                     showView();
-                    editText.setText("");
                 }
             });
 
         }else {
-            //DbConnector.setPlaylist(getApplicationContext(), ff.getSelectedPaths(), list.get(v.getId());
+            DbConnector.setPlaylist(getApplicationContext(),playlistList.get(v.getId()), ff.getSelectedPaths());
             ViewPager pager = (ViewPager) findViewById(R.id.pager);
             assert pager != null;
             pager.setVisibility(ViewPager.VISIBLE);
@@ -332,7 +371,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ff.unselectMusicItems();
             }
         }
+
+
+
     }
+
 
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
@@ -483,10 +526,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 assert linearLayout != null;
                 linearLayout.setVisibility(LinearLayout.VISIBLE);
                 playlistList.add("+ Add New Playlist");
-                //list.addAll(DbConnector.getPlaylists(getApplicationContext));
+                playlistList.addAll(DbConnector.getPlaylist(getApplicationContext()));
                showView();
             }else{
                 Toast.makeText(getApplicationContext(), "Make shore, that you have selected some thing! ", Toast.LENGTH_SHORT).show();
+            }
+        }
+        if (id == R.id.removePlaylistInMenu) {
+            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
+            if(ff.getSelectedPlaylist().size()>0){
+                for(String s: ff.getSelectedPlaylist()){
+                    DbConnector.removePlaylist(getApplicationContext(), s);
+                    ff.reloadForPlaylist();
+                }
+            }else if(ff.getSelectedPaths().size()>0&&ff.getNumberOfPlaylist()>0){
+                DbConnector.removeFilesFromPlaylist(getApplicationContext(), ff.getPreviousList().get(ff.getNumberOfPlaylist()-10), ff.getSelectedPaths());
+                ff.reloadForPlaylist();
+            }
+            else{
+                Toast.makeText(getApplicationContext(), "Please, Select something aft first!", Toast.LENGTH_SHORT).show();
             }
         }
         return super.onOptionsItemSelected(item);

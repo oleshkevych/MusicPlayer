@@ -17,4 +17,10 @@
         android:orderInCategory="100"
         android:title="Add to playlist"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/removePlaylistInMenu"
+        android:orderInCategory="100"
+        android:title="Remove playlist"
+        android:visible="false"
+        app:showAsAction="never"/>
 </menu>
