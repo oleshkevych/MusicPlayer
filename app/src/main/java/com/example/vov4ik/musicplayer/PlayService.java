@@ -165,8 +165,8 @@ public class PlayService extends Service {
         return START_STICKY; //super.onStartCommand(intent, flags, startId);
     }
     private static void playFile(String filePath){
-        Log.d("Test", " "+playingFile);
-        Log.d("Test", " "+filePath);
+//        Log.d("Test", " "+playingFile);
+//        Log.d("Test", " "+filePath);
 
         if(filePath == null) {
             try {
@@ -286,6 +286,7 @@ public class PlayService extends Service {
             player.pause();
             timer();
             sendNotification(context);
+            DbConnector.setLastPlayListAndTime(context, path, lastPlayedTime);
         }
         AutoAudioStopper.getInstance().stopFocus();
     }

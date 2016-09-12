@@ -46,10 +46,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AsyncTask async;
     private boolean asyncStop = false;
     public static List<String> playlistList = new ArrayList<>();
-    private static Context mContext;
+    private static Context context;
 
-    public static Context getmContext() {
-        return mContext;
+    public static Context getContext() {
+        return context;
     }
 
     public static Boolean getExecuteTrigger() {
@@ -63,8 +63,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        MainActivity.mContext = getApplicationContext();
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_main);
         if(PlayService.getPlayer()==null) {
             Intent intent = new Intent(this, PlayService.class);
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent1 = new Intent(this, AutoAudioStopper.class);
             startService(intent1);
 
-            AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) getApplicationContext().getSystemService(context.AUDIO_SERVICE);
 
             AutoAudioStopper.getInstance().setAudioManager(am);
             AutoAudioStopper.getInstance().setContext(this);
@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    InputMethodManager imm = (InputMethodManager)getSystemService(context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     if(MainActivity.playlistList.contains(editText.getText().toString())){
                         Toast.makeText(getApplicationContext(), "This name exist!!", Toast.LENGTH_SHORT).show();

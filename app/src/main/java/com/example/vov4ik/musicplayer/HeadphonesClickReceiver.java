@@ -12,10 +12,16 @@ import android.widget.Toast;
  */
 public class HeadphonesClickReceiver extends BroadcastReceiver {
     static int d = 0;
-    public HeadphonesClickReceiver ()
-    {
-        super ();
-    }
+//    public HeadphonesClickReceiver ()
+//    {
+//        super ();
+//    }
+//    final Handler handler = new Handler();
+//    Runnable mLongPressed = new Runnable() {
+//        public void run() {
+//            Log.d("", "Long press!");
+//        }
+//    };
     @Override
     public void onReceive(final Context context, Intent intent) {
 //        if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
@@ -68,6 +74,19 @@ public class HeadphonesClickReceiver extends BroadcastReceiver {
         if (event == null) {
             return;
         }
+//        Log.d ("Test", intentAction + " happended");
+//        if (!Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
+//            Log.d ("Test", "no media button information");
+//            return;
+//        }
+//        Log.d("Test", event.getKeyCode()+"+");
+//        Log.d("Test", MotionEvent.ACTION_DOWN+"");
+//
+//        if (event.getAction() == MotionEvent.ACTION_DOWN)
+//                    handler.postDelayed(mLongPressed, 1000);
+//                if ((event.getAction() == MotionEvent.ACTION_MOVE) || (event.getAction() == MotionEvent.ACTION_UP))
+//                    handler.removeCallbacks(mLongPressed);
+//
         int action = event.getAction();
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_HEADSETHOOK:
@@ -81,13 +100,13 @@ public class HeadphonesClickReceiver extends BroadcastReceiver {
                             // single click *******************************
                             if (d == 1) {
                                 Toast.makeText(context, "single click!", Toast.LENGTH_SHORT).show();
-                                if(PlayService.getPlayer()!=null) {
+                                if (PlayService.getPlayer() != null) {
                                     if (PlayService.isPlayingNow()) {
                                         PlayService.pausePlaying();
                                     } else {
                                         PlayService.startPlaying();
                                     }
-                                } else{
+                                } else {
                                     Intent intent1 = new Intent(context, PlayService.class);
                                     intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
                                     context.startService(intent1);
@@ -96,14 +115,14 @@ public class HeadphonesClickReceiver extends BroadcastReceiver {
                             // double click *********************************
                             if (d == 2) {
                                 Toast.makeText(context, "Double click!!", Toast.LENGTH_SHORT).show();
-                                if(PlayService.getPlayer()!=null) {
+                                if (PlayService.getPlayer() != null) {
                                     PlayService.myLastPressTime = 0;
                                     PlayService.nextSong();
                                 }
                             }
                             if (d == 3) {
                                 Toast.makeText(context, "Thre clicks!!", Toast.LENGTH_SHORT).show();
-                                if(PlayService.getPlayer()!=null) {
+                                if (PlayService.getPlayer() != null) {
                                     PlayService.previous();
                                 }
                             }
@@ -113,7 +132,17 @@ public class HeadphonesClickReceiver extends BroadcastReceiver {
                     if (d == 1) {
                         handler.postDelayed(r, 600);
                     }
-                }break;
+                }
+                break;
+
+
+
+//
+//            @Override
+//            public boolean onTouchEvent (MotionEvent event, MapView mapView){
+//
+//                return super.onTouchEvent(event, mapView);
+//            }
         }
     }
 }

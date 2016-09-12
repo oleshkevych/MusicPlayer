@@ -89,7 +89,7 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
         }
         if (!((v.getId() == 0) && (playlistTrigger))) {
             getMusicItemsList().setCheckingTrigger(true);
-            v.setBackground(MainActivity.getmContext().getResources().getDrawable(R.drawable.checked_view_background));
+            v.setBackground(MainActivity.getContext().getResources().getDrawable(R.drawable.checked_view_background));
             v.setTag("checked");
             if ((!playlistTrigger)) {
                 List<String> newPath = path.get(v.getId());
@@ -127,15 +127,15 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
                 show(playlistNames);
                 playlistTrigger = false;
             } else {
-                Intent intent = new Intent(MainActivity.getmContext(), PlayerActivity.class);
+                Intent intent = new Intent(MainActivity.getContext(), PlayerActivity.class);
                 intent.putExtra(EXTRA_FOR_FILES, filesName.get(numberOfPlaylist).toArray(new String[filesName.get(numberOfPlaylist).size()]));
                 intent.putExtra(EXTRA_FOR_CLICKED_FILE, path.get(numberOfPlaylist).get(v.getId()));
                 intent.putExtra(EXTRA_FOR_PATHS, path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()]));
                 if(isAdded()) {
-                    MainActivity.getmContext().startActivity(intent);
+                    startActivity(intent);
                 }else{
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    MainActivity.getmContext().startActivity(intent);
+                    MainActivity.getContext().startActivity(intent);
                 }
             }
         } else if (!((playlistTrigger) && (v.getId() == 0))) {
@@ -154,7 +154,7 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
                 }
 
             } else {
-                v.setBackground(MainActivity.getmContext().getResources().getDrawable(R.drawable.checked_view_background));
+                v.setBackground(MainActivity.getContext().getResources().getDrawable(R.drawable.checked_view_background));
                 v.setTag("checked");
                 if ((!playlistTrigger)) {
                     List<String> newPath = path.get(v.getId());
