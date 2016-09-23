@@ -47,7 +47,20 @@ public class PlayService extends Service {
     private static final String PLAY_ACTION = "com.example.vov4ik.musicplayer.PlayService.play";
     private static final String NEXT_ACTION = "com.example.vov4ik.musicplayer.PlayService.next";
     private static final String PREV_ACTION = "com.example.vov4ik.musicplayer.PlayService.prev";
-//    private static final String OPEN_ACTION = "com.example.vov4ik.musicplayer.PlayService.open";
+    private static int trekNumber;
+    private static  int[]result;
+
+    public static int[] getResult() {
+        return result;
+    }
+
+    public static int getTrekNumber() {
+        return trekNumber;
+    }
+
+    public static void setTrekNumber(int trekNumber) {
+        PlayService.trekNumber = trekNumber;
+    }
 
     public static boolean isShuffle() {
         return shuffle;
@@ -58,6 +71,15 @@ public class PlayService extends Service {
     }
 
     public static void setShuffle(boolean shuffle) {
+        if(shuffle){
+            for(int i = 0; i<result.length; i++){
+                if(result[i] == trekNumber){
+                    trekNumber = i;
+                }
+            }
+        }else{
+            trekNumber = path.indexOf(playingFile);
+        }
         PlayService.shuffle = shuffle;
     }
 
@@ -78,12 +100,26 @@ public class PlayService extends Service {
     }
 
     public static void setPath(List<String> path) {
-        PlayService.path = path;
+        List<String> p = new ArrayList<>();
+        for (int i = 0; i < path.size(); i++) {
+            File f = new File(path.get(i));
+            if ((!path.get(i).equals("..GoToRoot"))&&(!f.isDirectory())) {
+                p.add(path.get(i));
+            }
+        }
+        PlayService.path = p;
         makeShufflePath();
     }
 
     public static void addPaths(List<String> pathList){
-        path.addAll(pathList);
+        List<String> p = new ArrayList<>();
+        for (int i = 0; i < pathList.size(); i++) {
+            File f = new File(pathList.get(i));
+            if ((!pathList.get(i).equals("..GoToRoot"))&&(!f.isDirectory())) {
+                p.add(pathList.get(i));
+            }
+        }
+        path.addAll(p);
         makeShufflePath();
     }
     @Nullable
@@ -95,6 +131,9 @@ public class PlayService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        setPath(DbConnector.getLastPlayList(getApplicationContext()));
+        setTrekNumber(DbConnector.getLastPlayNumber(getApplicationContext()));
+        setLastPlayedTime(DbConnector.getLastPlayTime(getApplicationContext()));
         PlayService.color  = getResources().getColor(R.color.colorIconNotification);
         PlayService.checkAPI =  Build.VERSION.SDK_INT>20;
 
@@ -118,7 +157,7 @@ public class PlayService extends Service {
         player = null;
         path.remove(playingFile);
         path.add(0, playingFile);
-        DbConnector.setLastPlayListAndTime(getApplicationContext(), path, lastPlayedTime);
+        //DbConnector.setLastPlayListAndTime(getApplicationContext(), path, lastPlayedTime);
         nm.cancel(1);
         stopForeground(true);
         nm.cancelAll();
@@ -133,8 +172,10 @@ public class PlayService extends Service {
         PlayService.nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         PlayService.context = this;
         if(intent!=null&&intent.getAction()!=null) {
-            Log.d("test", intent.getAction() + "");
             if (intent.getAction().equals(PLAY_ACTION)) {
+                if( intent.getIntExtra("NUMBER", 10000)!=10000 ){
+                    setTrekNumber(intent.getIntExtra("NUMBER", 0));
+                }
                 if(player == null){
                     AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
                     AutoAudioStopper.getInstance().setAudioManager(am);
@@ -162,7 +203,7 @@ public class PlayService extends Service {
 
             startForeground(1, notification);
         }
-        return START_STICKY; //super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;//START_STICKY; //super.onStartCommand(intent, flags, startId);
     }
     private static void playFile(String filePath){
 //        Log.d("Test", " "+playingFile);
@@ -171,6 +212,7 @@ public class PlayService extends Service {
         if(filePath == null) {
             try {
                 setPath(DbConnector.getLastPlayList(context));
+                setTrekNumber(DbConnector.getLastPlayNumber(context));
                 PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
                 PlayService.playingFile = path.get(0);
             }catch(RuntimeException r){
@@ -220,21 +262,21 @@ public class PlayService extends Service {
     }
 
 
-    public static void playFile(String filePath, Context context, NotificationManager nm){
-        if(filePath.equals("START")) {
-            setPath(DbConnector.getLastPlayList(context));
-            PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
-            PlayService.playingFile = path.get(0);
-        }else {
-            PlayService.playingFile = filePath;
-        }
-        PlayService.context = context;
-        PlayService.nm = nm;
-        if((context!=null)&&(nm!=null)) {
-            sendNotification(context);
-        }
-        timer();
-    }
+//    public static void playFile(String filePath, Context context, NotificationManager nm){
+//        if(filePath.equals("START")) {
+//            setPath(DbConnector.getLastPlayList(context));
+//            PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
+//            PlayService.playingFile = path.get(0);
+//        }else {
+//            PlayService.playingFile = filePath;
+//        }
+//        PlayService.context = context;
+//        PlayService.nm = nm;
+//        if((context!=null)&&(nm!=null)) {
+//            sendNotification(context);
+//        }
+//        timer();
+//    }
 
     public static void nextSong(){
         lastPlayedTime = 0;
@@ -247,20 +289,40 @@ public class PlayService extends Service {
         if(path.size()>0) {
             if (nextSong) {
                 nextSong = false;
-                if ((path.indexOf(playingFile) + 1) < path.size()) {
-                    playFile(path.get(path.indexOf(playingFile) + 1));
+//                if ((path.indexOf(playingFile) + 1) < path.size()) {
+//                    playFile(path.get(path.indexOf(playingFile) + 1));
+//                } else {
+//                    playFile(path.get(0));
+//                }
+//            } else if (isPlayingNow()) {
+//                if ((path.indexOf(playingFile) + 1) < path.size()) {
+//                    playFile(path.get(path.indexOf(playingFile) + 1));
+//                } else {
+//                    playFile(path.get(0));
+//                }
+//            } else {
+//                if ((path.indexOf(playingFile) + 1) < path.size()) {
+//                    playingFile = path.get(path.indexOf(playingFile) + 1);
+//                }
+                if ((getTrekNumber() + 1) < path.size()) {
+                    playFile(path.get(getTrekNumber() + 1));
+                    setTrekNumber(getTrekNumber()+1);
                 } else {
                     playFile(path.get(0));
+                    setTrekNumber(0);
                 }
             } else if (isPlayingNow()) {
-                if ((path.indexOf(playingFile) + 1) < path.size()) {
-                    playFile(path.get(path.indexOf(playingFile) + 1));
+                if ((getTrekNumber() + 1) < path.size()) {
+                    playFile(path.get(getTrekNumber() + 1));
+                    setTrekNumber(getTrekNumber() + 1);
                 } else {
+                    setTrekNumber(0);
                     playFile(path.get(0));
                 }
             } else {
-                if ((path.indexOf(playingFile) + 1) < path.size()) {
-                    playingFile = path.get(path.indexOf(playingFile) + 1);
+                if ((getTrekNumber() + 1) < path.size()) {
+                    playingFile = path.get(getTrekNumber() + 1);
+                    setTrekNumber(getTrekNumber()+1);
                 }
                 sendNotification(context);
             }
@@ -279,20 +341,43 @@ public class PlayService extends Service {
         }
     }
 
-    public static void pausePlaying(){
+    public static void pausePlaying() {
         pauseTrigger = true;
-        if(player!=null) {
+        if(player!= null) {
             lastPlayedTime = player.getCurrentPosition();
             player.pause();
+//            Log.d("test", "pause "+lastPlayedTime+" "+getTrekNumber()+" "+path.size());
+            DbConnector.setLastPlayListAndTime(context, path, lastPlayedTime, getTrekNumber());
             timer();
             sendNotification(context);
-            DbConnector.setLastPlayListAndTime(context, path, lastPlayedTime);
         }
         AutoAudioStopper.getInstance().stopFocus();
     }
 
     public static void startPlaying() {
-        playFile(playingFile);
+        List<String> path;
+        if(shuffle) {
+            path = shufflePath;
+        }else{
+            path = getPath();
+        }
+//        Log.d("Test", getTrekNumber()+" "+path.size());
+        try {
+            playFile(path.get(getTrekNumber()));
+        }catch(IndexOutOfBoundsException i){
+            try {
+                setPath(DbConnector.getLastPlayList(context));
+                setTrekNumber(DbConnector.getLastPlayNumber(context));
+                setLastPlayedTime(DbConnector.getLastPlayTime(context));
+                playFile(path.get(getTrekNumber()));
+            }catch(IndexOutOfBoundsException i1){
+                setPath(DbConnector.getAllSongsPaths(context));
+                Random r = new Random();
+                setTrekNumber(r.nextInt(PlayService.path.size() - 1));
+            }
+
+
+        }
         sendNotification(context);
     }
 
@@ -350,6 +435,7 @@ public class PlayService extends Service {
         }
     }
 
+
     public static void previous(){
         List<String> path;
         if(shuffle) {
@@ -359,12 +445,36 @@ public class PlayService extends Service {
         }
         if(path.size()>0) {
             if (isPlayingNow()) {
+//                if (player.getCurrentPosition() < 10000) {
+//                    lastPlayedTime = 0;
+//                    if ((path.indexOf(playingFile) - 1) >= 0) {
+//                        playFile(path.get(path.indexOf(playingFile) - 1));
+//                    } else {
+//                        playFile(path.get(path.size() - 1));
+//                    }
+//                } else {
+//                    lastPlayedTime = 0;
+//                    playFile(playingFile);
+//                }
+//            } else {
+//                if (lastPlayedTime > 10000) {
+//                    lastPlayedTime = 0;
+//                } else {
+//                    lastPlayedTime = 0;
+//                    if ((path.indexOf(playingFile) - 1) >= 0) {
+//                        playingFile = path.get(path.indexOf(playingFile) - 1);
+//                    } else {
+//                        playingFile = path.get(path.size() - 1);
+//                    }
+//                }
                 if (player.getCurrentPosition() < 10000) {
                     lastPlayedTime = 0;
-                    if ((path.indexOf(playingFile) - 1) >= 0) {
-                        playFile(path.get(path.indexOf(playingFile) - 1));
+                    if ((getTrekNumber() - 1) >= 0) {
+                        playFile(path.get(getTrekNumber() - 1));
+                        setTrekNumber(getTrekNumber() - 1);
                     } else {
                         playFile(path.get(path.size() - 1));
+                        setTrekNumber((path.size() - 1));
                     }
                 } else {
                     lastPlayedTime = 0;
@@ -375,10 +485,12 @@ public class PlayService extends Service {
                     lastPlayedTime = 0;
                 } else {
                     lastPlayedTime = 0;
-                    if ((path.indexOf(playingFile) - 1) >= 0) {
-                        playingFile = path.get(path.indexOf(playingFile) - 1);
+                    if ((getTrekNumber() - 1) >= 0) {
+                        playingFile = path.get(getTrekNumber() - 1);
+                        setTrekNumber(getTrekNumber()-1);
                     } else {
                         playingFile = path.get(path.size() - 1);
+                        setTrekNumber((path.size() - 1));
                     }
                 }
                 sendNotification(context);
@@ -488,7 +600,7 @@ public class PlayService extends Service {
         PlayService.shufflePath = new ArrayList<>();
         int lengthOfArray = path.size();
 
-        int[]result = new int[lengthOfArray];
+        result = new int[lengthOfArray];
         for (int i = 0; i < lengthOfArray; i++) {
             result[i] = i;
         }
@@ -505,8 +617,19 @@ public class PlayService extends Service {
             PlayService.shufflePath.add(j, path.get(result[j]));
         }
         if (playingFile!=null&&!playingFile.equals("")) {
+            int index = 0;
+            for (int j = 0; j<result.length; j++) {
+                if(PlayService.shufflePath.indexOf(playingFile) == result[j]) {
+                    index = j;
+                    break;
+                }
+            }
+            int a = result[index];
+            result[index] = result[0];
+            result[0] = a;
             PlayService.shufflePath.remove(playingFile);
             PlayService.shufflePath.add(0, playingFile);
+
         }
     }
 
@@ -518,10 +641,9 @@ public class PlayService extends Service {
                         public void run() {
                             int incr=0;
                             while(true) {
-                                Log.d("Test", "Service "+playingFile);
                                 if (isPlayingNow()||player==null) {
                                     break;
-                                } else if (incr == 300000) {
+                                } else if (incr > 300000) {
                                     stopService();
                                     incr = 0;
                                 }

@@ -18,6 +18,11 @@
         android:title="Add to playlist"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/startTabActivity"
+        android:orderInCategory="100"
+        android:title="Select tabs to show"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/removePlaylistInMenu"
         android:orderInCategory="100"
         android:title="Remove playlist"

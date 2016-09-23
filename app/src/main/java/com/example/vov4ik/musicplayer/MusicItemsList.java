@@ -1,9 +1,8 @@
 package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
-import android.util.Log;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ public class MusicItemsList {
 
     private List<String> checkedList = new ArrayList<>();
     private boolean checkingTrigger = false;
-    private LinearLayout linearLayout;
+    private RecyclerView recyclerView;
     private List<String> selectedPaths = new ArrayList<String>();
     private View rootView;
     private List<String> folderName = null;
@@ -24,11 +23,20 @@ public class MusicItemsList {
     private boolean folderTrigger = false;
     private int numberOfFolder;
     private List<String> selectedPlaylist = new ArrayList<String>();
-    private int numberOfPlaylist=0;
+    private int numberOfPlaylist=-5;
     private List<List<String>> pathPlaylist = null;
     private boolean playlistChanges = false;
     private List<List<String>> namePlaylist = null;
     private Context context;
+    private boolean allSongsFragment = false;
+
+    public boolean isAllSongsFragment() {
+        return allSongsFragment;
+    }
+
+    public void setAllSongsFragment(boolean allSongsFragment) {
+        this.allSongsFragment = allSongsFragment;
+    }
 
     public void setContext(Context context) {
         this.context = context;
@@ -59,7 +67,6 @@ public class MusicItemsList {
     }
 
     public void setPathPlaylist(List<List<String>> pathPlaylist) {
-        Log.d("Test", "this" + pathPlaylist.size());
         this.pathPlaylist = pathPlaylist;
     }
 
@@ -150,12 +157,12 @@ public class MusicItemsList {
         this.checkedList = checkedList;
     }
 
-    public LinearLayout getLinearLayout() {
-        return linearLayout;
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
     }
 
-    public void setLinearLayout(LinearLayout linearLayout) {
-        this.linearLayout = linearLayout;
+    public void setRecyclerView(RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
     }
 
     public List<String> getSelectedPaths() {
@@ -172,4 +179,5 @@ public class MusicItemsList {
     public void removeSelectedPaths(String selectedPaths) {
         this.selectedPaths.remove(selectedPaths);
     }
+
 }

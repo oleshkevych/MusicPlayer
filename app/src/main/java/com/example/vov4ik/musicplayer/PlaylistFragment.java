@@ -4,18 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlaylistFragment extends MusicListFragment implements View.OnLongClickListener, View.OnClickListener {
+public class PlaylistFragment extends MusicListFragment {//implements View.OnLongClickListener, View.OnClickListener {
 
     final static String EXTRA_FOR_CLICKED_FILE = "extra for clicked file";
     final static String EXTRA_FOR_FILES = "extra for files";
@@ -52,7 +52,7 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
                              Bundle savedInstanceState) {
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_playlists, container, false));
         rootView = getMusicItemsList().getRootView();
-        getMusicItemsList().setLinearLayout((LinearLayout) rootView.findViewById(R.id.layoutPlaylist));
+        getMusicItemsList().setRecyclerView((RecyclerView) rootView.findViewById(R.id.playlist_recycler_view));
         getMusicItemsList().setContext(getContext());
         getMusicItemsList().setCheckingTrigger(false);
         getMusicItemsList().setFolderName(DbConnector.getPlaylist(getContext()));
@@ -60,7 +60,7 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
         playlistNames = (getMusicItemsList().getFolderName());
         path = DbConnector.getPlaylistFiles(getContext());
         nameMaker();
-        show(playlistNames);
+        showPlaylist(playlistNames);
         return rootView;
     }
 
@@ -80,34 +80,47 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
     }
 
     @Override
-    public boolean onLongClick(View v) {
+    public boolean onLongClick(int position) {
         if(getMusicItemsList().isPlaylistChanges()) {
             playlistNames = (getMusicItemsList().getFolderName());
             path = getMusicItemsList().getPathPlaylist();
             nameMaker();
             getMusicItemsList().setPlaylistChanges(false);
         }
-        if (!((v.getId() == 0) && (playlistTrigger))) {
+        if (!((position == 0) && (playlistTrigger))) {
+            List<String> l =  getMusicItemsList().getCheckedList();
+            l.add(String.valueOf(position));
+            getMusicItemsList().setCheckedList(l);
             getMusicItemsList().setCheckingTrigger(true);
-            v.setBackground(MainActivity.getContext().getResources().getDrawable(R.drawable.checked_view_background));
-            v.setTag("checked");
             if ((!playlistTrigger)) {
-                List<String> newPath = path.get(v.getId());
+                List<String> newPath = path.get(position);
                 newPath.remove(0);
-                getMusicItemsList().addSelectedPlaylist(playlistNames.get(v.getId()));
+                getMusicItemsList().addSelectedPlaylist(playlistNames.get(position));
                 for(String s: newPath) {
                     getMusicItemsList().setSelectedPaths(s);
                 }
-            } else if (v.getId() != 0) {
+                List<String[]> arrayList = new ArrayList<>();
+                RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, playlistNames,
+                        arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext());
+                getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
+            } else if (position != 0) {
                 getMusicItemsList().setNumberOfPlaylist(numberOfPlaylist + 10);
-                getMusicItemsList().setSelectedPaths(path.get(numberOfPlaylist).get(v.getId()));
+                getMusicItemsList().setSelectedPaths(path.get(numberOfPlaylist).get(position));
+                List<String[]> arrayList = new ArrayList<>();
+                arrayList.add(getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()).toArray(new String[getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()).size()]));
+                RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, filesName.get(numberOfPlaylist),
+                        arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext());
+                getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             }
         }
-    return true;
+        Log.d("Test", getMusicItemsList().getCheckedList().toString());
+        return true;
     }
 
     @Override
-    public void onClick(View v) {
+    public void onClick(int position) {
         if(getMusicItemsList().isPlaylistChanges()) {
             playlistNames = (getMusicItemsList().getFolderName());
             path = getMusicItemsList().getPathPlaylist();
@@ -119,56 +132,68 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
         Log.d("Test", "path"+filesName.size());
 //                Log.d("Test", "path name "+ Arrays.toString(path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()])));
         if (!getMusicItemsList().isCheckingTrigger()) {
-            if ((!playlistTrigger)) {
-                numberOfPlaylist = v.getId();
-                show(filesName.get(v.getId()));
+            if ((!playlistTrigger)&&(!playlistNames.get(0).equals("No Playlists available"))) {
+                numberOfPlaylist = position;
+                getMusicItemsList().setNumberOfFolder(numberOfPlaylist);
                 playlistTrigger = true;
-            } else if (v.getId() == 0) {
-                show(playlistNames);
+                getMusicItemsList().setFolderTrigger(true);
+                showPlaylist(filesName.get(position));
+            } else if (position == 0) {
                 playlistTrigger = false;
+                getMusicItemsList().setFolderTrigger(false);
+                showPlaylist(playlistNames);
             } else {
-                Intent intent = new Intent(MainActivity.getContext(), PlayerActivity.class);
-                intent.putExtra(EXTRA_FOR_FILES, filesName.get(numberOfPlaylist).toArray(new String[filesName.get(numberOfPlaylist).size()]));
-                intent.putExtra(EXTRA_FOR_CLICKED_FILE, path.get(numberOfPlaylist).get(v.getId()));
-                intent.putExtra(EXTRA_FOR_PATHS, path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()]));
-                if(isAdded()) {
-                    startActivity(intent);
-                }else{
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    MainActivity.getContext().startActivity(intent);
+//                Intent intent = new Intent(MainActivity.getContext(), PlayerActivity.class);
+//                intent.putExtra(EXTRA_FOR_FILES, filesName.get(numberOfPlaylist).toArray(new String[filesName.get(numberOfPlaylist).size()]));
+//                intent.putExtra(EXTRA_FOR_CLICKED_FILE, path.get(numberOfPlaylist).get(position));
+//                intent.putExtra(EXTRA_FOR_PATHS, path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()]));
+
+                PlayService.setTrekNumber(position);
+                PlayService.setPath(path.get(numberOfPlaylist));
+                if(PlayService.getPlayer()!=null) {
+                    PlayService.setLastPlayedTime(0);
+                    PlayService.startPlaying();
+                } else {
+                    Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                    MainActivity.getContext().startService(intent1);
+                    PlayService.setLastPlayedTime(0);
+                    PlayService.startPlaying();
                 }
+//                if(isAdded()) {
+//                    startActivity(intent);
+//                }else{
+//                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+//                    MainActivity.getContext().startActivity(intent);
+//                }
             }
-        } else if (!((playlistTrigger) && (v.getId() == 0))) {
-            if ((v.getTag()!=null)&&(v.getTag().equals("checked"))){
-                v.setBackground(null);
-                v.setTag(null);
+        } else if (!((playlistTrigger) && (position == 0))) {
+            if (getMusicItemsList().getCheckedList().contains(String.valueOf(position))){
                 if ((!playlistTrigger)) {
-                    List<String> newPath = path.get(v.getId());
+                    List<String> newPath = path.get(position);
                     newPath.remove(0);
-                    getMusicItemsList().removeSelectedPlaylist(playlistNames.get(v.getId()));
+                    getMusicItemsList().removeSelectedPlaylist(playlistNames.get(position));
                     for(String s: newPath) {
                         getMusicItemsList().removeSelectedPaths(s);
                     }
-                } else if (v.getId() != 0) {
-                    getMusicItemsList().removeSelectedPaths(path.get(numberOfPlaylist).get(v.getId()));
+                } else if (position != 0) {
+                    getMusicItemsList().removeSelectedPaths(path.get(numberOfPlaylist).get(position));
                 }
 
             } else {
-                v.setBackground(MainActivity.getContext().getResources().getDrawable(R.drawable.checked_view_background));
-                v.setTag("checked");
                 if ((!playlistTrigger)) {
-                    List<String> newPath = path.get(v.getId());
+                    List<String> newPath = path.get(position);
                     newPath.remove(0);
-                    getMusicItemsList().addSelectedPlaylist(playlistNames.get(v.getId()));
+                    getMusicItemsList().addSelectedPlaylist(playlistNames.get(position));
                     for(String s: newPath) {
                         getMusicItemsList().setSelectedPaths(s);
                     }
-                } else if (v.getId() != 0) {
-                    getMusicItemsList().setSelectedPaths(path.get(numberOfPlaylist).get(v.getId()));
+                } else if (position != 0) {
+                    getMusicItemsList().setSelectedPaths(path.get(numberOfPlaylist).get(position));
                 }
 
             }
         }
+        Log.d("Test", getMusicItemsList().getCheckedList().toString());
     }
 
     private void nameMaker() {
@@ -226,9 +251,9 @@ public class PlaylistFragment extends MusicListFragment implements View.OnLongCl
         if((!menuVisible)&&(rootView!=null)){
             getMusicItemsList().setCheckingTrigger(false);
             if(playlistTrigger) {
-                show(filesName.get(numberOfPlaylist));
+                showPlaylist(filesName.get(numberOfPlaylist));
             }else {
-                show(playlistNames);
+                showPlaylist(playlistNames);
             }
         }
     }

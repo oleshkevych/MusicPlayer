@@ -2,6 +2,7 @@ package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class FolderAllIncludeFragment extends MusicListFragment implements View.OnClickListener, View.OnLongClickListener {
+public class FolderAllIncludeFragment extends MusicListFragment {//implements View.OnClickListener, View.OnLongClickListener {
 
     private  View rootView;
     private boolean folderTrigger = false;
@@ -94,7 +95,7 @@ public class FolderAllIncludeFragment extends MusicListFragment implements View.
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_folder_all_include, container, false));
-        getMusicItemsList().setLinearLayout((LinearLayout) getMusicItemsList().getRootView().findViewById(R.id.layoutFolderAllInclude));
+        getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.folder_all_include_recycler_view));
         getMusicItemsList().setCheckingTrigger(false);
         getMusicItemsList().setPath(DbConnector.getMainFoldersPathsFromDb(getContext()));
         getMusicItemsList().setFolderName(DbConnector.getMainFoldersFromDb(getContext()));

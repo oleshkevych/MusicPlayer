@@ -2,14 +2,14 @@ package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import java.util.Arrays;
 
-public class FolderFragment extends MusicListFragment implements View.OnClickListener, View.OnLongClickListener {
+public class FolderFragment extends MusicListFragment {//implements View.OnClickListener, View.OnLongClickListener {
 
 /*    private List<String> folderName = null;
     private List<String[]> path = null;
@@ -90,15 +90,13 @@ public class FolderFragment extends MusicListFragment implements View.OnClickLis
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_folder, container, false));
-        getMusicItemsList().setLinearLayout((LinearLayout) getMusicItemsList().getRootView().findViewById(R.id.layoutFolder));
+        getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.folder_recycler_view));
         //linearLayout = getMusicItemsList().getLinearLayout(); // TODO: Refactor this
         getMusicItemsList().setCheckingTrigger(false);
         getMusicItemsList().setFolderName(DbConnector.getFoldersFromDb(getContext()));
         getMusicItemsList().setPath(DbConnector.getPathsFromDb(getContext()));
         getMusicItemsList().setMusicFiles(DbConnector.getFilesNamesFromDb(getContext()));
         show(getMusicItemsList().getFolderName());
-
-
         return getMusicItemsList().getRootView();
     }
 

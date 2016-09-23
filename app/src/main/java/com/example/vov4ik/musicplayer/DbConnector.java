@@ -1,6 +1,7 @@
 package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaMetadataRetriever;
 import android.os.Environment;
 import android.util.Log;
@@ -40,24 +41,28 @@ public class DbConnector {
     }
 
     public void fillerForDb(Context context){
-        String dirPath = Environment.getExternalStorageDirectory().getParentFile().getParent();
-
-        Log.d("Test", "START");
-        File f = new File(dirPath);
-        File[] files = f.listFiles();
-        folderMethod(files);
-        Log.d("Test", "ALL INCLUDE");
-        folderAllIncludeMethod();
-        Log.d("Test", "ALBUM");
-        albumMethod();
-        Log.d("Test", "ARTIST");
-        artistMethod();
-
-        Log.d("Test", "DELETE");
-        DbConnector.deleteDb(context);
-        Log.d("Test", "FILL");
-        new DbHelper(context).filler(folders, musicFiles, path, albums, pathAlbums, artists, pathArtist, mainFolders, pathForMainFolders);
-        Log.d("Test", "FINISH");
+//        String dirPath = Environment.getExternalStorageDirectory().getParentFile().getParent();
+//
+//        Log.d("Test", "START");
+//        File f = new File(dirPath);
+//        File[] files = f.listFiles();
+//        folderMethod(files);
+//        Log.d("Test", "ALL INCLUDE");
+//        folderAllIncludeMethod();
+//        Log.d("Test", "ALBUM");
+//        albumMethod();
+//        Log.d("Test", "ARTIST");
+//        artistMethod();
+//
+//        Log.d("Test", "DELETE");
+//        DbConnector.deleteDb(context);
+//        Log.d("Test", "FILL");
+//        new DbHelper(context).filler(folders, musicFiles, path, albums, pathAlbums, artists, pathArtist, mainFolders, pathForMainFolders);
+//        Log.d("Test", "FINISH");
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        context.startActivity(intent);
     }
 
     private void folderMethod(File[] files){
@@ -329,6 +334,12 @@ public class DbConnector {
     public static List<String[]> getMainFoldersNamesFromDb(Context context){
         return new DbHelper(context).getNameMainFolders();
     }
+    public static List<String> getAllSongsPaths(Context context){
+        return new DbHelper(context).getAllSongsPaths();
+    }
+    public static List<String> getAllSongsNames(Context context){
+        return new DbHelper(context).getAllSongsNames();
+    }
     public static void deleteDb(Context context){
         new DbHelper(context).delete();
     }
@@ -338,8 +349,11 @@ public class DbConnector {
     public static int getLastPlayTime(Context context){
         return new DbHelper(context).getLastPlayedTime();
     }
-    public static void setLastPlayListAndTime(Context context, List<String> list, int time){
-        new DbHelper(context).setLastPlayListAndTime(list, time);
+    public static int getLastPlayNumber(Context context){
+        return new DbHelper(context).getLastPlayedNumber();
+    }
+    public static void setLastPlayListAndTime(Context context, List<String> list, int time, int number){
+        new DbHelper(context).setLastPlayListAndTime(list, time, number);
         Log.d("test", "Load");
     }
     public static void setPlaylist(Context context,String playlist, List<String> paths){
@@ -356,6 +370,15 @@ public class DbConnector {
     }
     public static void removeFilesFromPlaylist(Context context, String playlist, List<String> files){
         new DbPlaylist(context).playlistFileRemover(playlist, files);
+    }
+    public static void tabsFiller(Context context, List<TabConstructor> tabs){
+        new DbTab(context).tabsFiller(tabs);
+    }
+    public static List<String> getVisibleTabs(Context context){
+        return new DbTab(context).getVisibleTabs();
+    }
+    public static List<TabConstructor> getAllTabs(Context context){
+        return new DbTab(context).getAllTabs();
     }
 }
 ///////////////////////////////////For simple file manager

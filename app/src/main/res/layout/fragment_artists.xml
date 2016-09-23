@@ -2,18 +2,24 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="com.example.vov4ik.musicplayer.ArtistsFragment">
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorWhite"
-    android:animateLayoutChanges="true"
-    android:verticalScrollbarPosition="right">
-    <LinearLayout
-        android:id="@+id/layoutArtist"
+             tools:context="com.example.vov4ik.musicplayer.ArtistsFragment"
+             android:background="@color/colorWhite">
+<!--<ScrollView-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:background="@color/colorWhite"-->
+    <!--android:animateLayoutChanges="true"-->
+    <!--android:verticalScrollbarPosition="right">-->
+    <!--<LinearLayout-->
+        <!--android:id="@+id/layoutArtist"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:orientation="vertical"-->
+        <!--android:padding="@dimen/scroll_padding"/>-->
+<!--</ScrollView>-->
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/artist_recycler_view"
+        android:scrollbars="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/scroll_padding"/>
-</ScrollView>
+        android:layout_height="match_parent"/>
 </FrameLayout>

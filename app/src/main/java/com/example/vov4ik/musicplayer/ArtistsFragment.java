@@ -2,6 +2,7 @@ package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class ArtistsFragment extends MusicListFragment implements View.OnClickListener, View.OnLongClickListener {
+public class ArtistsFragment extends MusicListFragment {//implements View.OnClickListener, View.OnLongClickListener {
 
     final static String EXTRA_FOR_FILES = "extra for files";
     final static String EXTRA_FOR_PATHS = "extra for paths";
@@ -91,7 +92,7 @@ private static MusicItemsList musicItemsList;
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_artists, container, false));
-        getMusicItemsList().setLinearLayout((LinearLayout) getMusicItemsList().getRootView().findViewById(R.id.layoutArtist));
+        getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.artist_recycler_view));
         getMusicItemsList().setCheckingTrigger(false);
         getMusicItemsList().setFolderName(DbConnector.getArtistFromDb(getContext()));
         getMusicItemsList().setPath(DbConnector.getArtistPathsFromDb(getContext()));

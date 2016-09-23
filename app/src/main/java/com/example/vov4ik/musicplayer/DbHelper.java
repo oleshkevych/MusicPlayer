@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class DbHelper extends SQLiteOpenHelper {
 
-    final static int DB_VERSION = 1;
+    final static int DB_VERSION = 3;
     final static String DB_NAME = "OwnHomeMadePlay.db";
 
     final static String TABLE_FOLDER = "folder";
@@ -43,6 +43,13 @@ public class DbHelper extends SQLiteOpenHelper {
     final static String CREATE_TABLE_MAIN_FOLDER = "CREATE TABLE IF NOT EXISTS "+TABLE_MAIN_FOLDER+" (" +
             COLUMN_NAME_ID_MAIN_FOLDER + " INTEGER PRIMARY KEY, "+ COLUMN_MAIN_FOLDER_NAME + " TEXT" + ");";
 
+    final static String TABLE_All_SONGS = "all_songs";
+    final static String COLUMN_NAME_ID_All_SONGS = "ID_all_songs";
+    final static String COLUMN_All_SONGS_PATH = "path_of_all_songs";
+    final static String COLUMN_All_SONGS_NAME = "name_of_all_songs";
+    final static String CREATE_TABLE_All_SONGS = "CREATE TABLE IF NOT EXISTS "+TABLE_All_SONGS+" (" +
+            COLUMN_NAME_ID_All_SONGS + " INTEGER PRIMARY KEY, "+ COLUMN_All_SONGS_PATH + " TEXT, "+COLUMN_All_SONGS_NAME + " TEXT" + ");";
+
     final static String TABLE_FILE = "file";
     final static String COLUMN_ID_FOLDER = "ID_file";
     final static String COLUMN_ID_ALBUM = "ID_album";
@@ -61,6 +68,7 @@ public class DbHelper extends SQLiteOpenHelper {
     final static String CREATE_TABLE_PLAY_SERVICE = "CREATE TABLE IF NOT EXISTS "+TABLE_PLAY_SERVICE+" (" +
             COLUMN_NAME_ID_PLAY_SERVICE + " INTEGER PRIMARY KEY, "+  COLUMN_PATH_PLAY_SERVICE + " TEXT, " +
             COLUMN_PLAYED_TIME + " INTEGER);";
+
 
 
 
@@ -84,6 +92,7 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ARTIST);
         db.execSQL(CREATE_TABLE_MAIN_FOLDER);
         db.execSQL(CREATE_TABLE_PLAY_SERVICE);
+        db.execSQL(CREATE_TABLE_All_SONGS);
     }
 
     @Override
@@ -98,6 +107,7 @@ public class DbHelper extends SQLiteOpenHelper {
         mDatabase.execSQL(CREATE_TABLE_ARTIST);
         mDatabase.execSQL(CREATE_TABLE_MAIN_FOLDER);
         mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
+        mDatabase.execSQL(CREATE_TABLE_All_SONGS);
         return this;
     }
 
@@ -110,6 +120,8 @@ public class DbHelper extends SQLiteOpenHelper {
         mDatabase.delete(TABLE_ALBUM, null, null);
         mDatabase.delete(TABLE_ARTIST, null, null);
         mDatabase.delete(TABLE_MAIN_FOLDER, null, null);
+        mDatabase.delete(TABLE_All_SONGS, null, null);
+        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_All_SONGS);
         mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FILE);
         mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FOLDER);
         mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_ALBUM);
@@ -127,6 +139,17 @@ public class DbHelper extends SQLiteOpenHelper {
                     DbHelper.TABLE_ALBUM,
                     null,
                     values);
+        }
+        for (int i = 0; i< paths.size(); i++){
+            for(int j = 1; j<paths.get(i).length; j++) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_All_SONGS_PATH, paths.get(i)[j]);
+                values.put(COLUMN_All_SONGS_NAME, files.get(i)[j]);
+                mDatabase.insert(
+                        DbHelper.TABLE_All_SONGS,
+                        null,
+                        values);
+            }
         }
         for (String artist: artists){
             ContentValues values = new ContentValues();
@@ -205,6 +228,42 @@ public class DbHelper extends SQLiteOpenHelper {
         }while(cursor.moveToNext());
         cursor.close();
         return searchingID;
+    }
+    public List<String> getAllSongsPaths(){
+        open();
+        List<String> songs = new ArrayList<>();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_All_SONGS, null);
+        cursor.moveToFirst();
+        try {
+            do{
+                if(!(cursor.getString(2)).equals("..goToRoot")) {
+                    songs.add(cursor.getString(1));
+                }
+            }while(cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            songs.add("Error database");
+        }
+        cursor.close();
+        mDatabase.close();
+        return songs;
+    }
+    public List<String> getAllSongsNames(){
+        open();
+        List<String> songs = new ArrayList<>();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_All_SONGS, null);
+        cursor.moveToFirst();
+        try {
+            do{
+                if(!(cursor.getString(2)).equals("..goToRoot")) {
+                    songs.add(cursor.getString(2));
+                }
+            }while(cursor.moveToNext());
+        }catch (CursorIndexOutOfBoundsException c){
+            songs.add("Error database");
+        }
+        cursor.close();
+        mDatabase.close();
+        return songs;
     }
     public List<String> getFolders(){
         open();
@@ -537,9 +596,22 @@ public class DbHelper extends SQLiteOpenHelper {
         mDatabase.close();
         return lastTime;
     }
-
-    public void setLastPlayListAndTime(List<String> list, int time) {
+    public int getLastPlayedNumber(){
         open();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        cursor.moveToFirst();
+        int lastTime = 0;
+        if(cursor.moveToNext()) {
+            lastTime = cursor.getInt(2);
+        }
+        cursor.close();
+        mDatabase.close();
+        return lastTime;
+    }
+
+    public void setLastPlayListAndTime(List<String> list, int time, int number) {
+        open();
+        Log.d("Test", "DATABASE is writing current trek list");
         mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
         mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE);
         mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
@@ -548,6 +620,8 @@ public class DbHelper extends SQLiteOpenHelper {
             values.put(COLUMN_PATH_PLAY_SERVICE, list.get(i));
             if (i == 0) {
                 values.put(COLUMN_PLAYED_TIME, time);
+            } else if (i ==1){
+                values.put(COLUMN_PLAYED_TIME, number);
             } else {
                 values.put(COLUMN_PLAYED_TIME, 0);
             }

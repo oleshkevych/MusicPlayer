@@ -2,21 +2,27 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context=".FolderFragment">
+             tools:context=".FolderFragment"
+             android:background="@color/colorWhite">
 
     <!-- TODO: Update blank fragment layout -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorWhite"
-        android:animateLayoutChanges="true"
-        android:verticalScrollbarPosition="right">
-        <LinearLayout
-            android:id="@+id/layoutFolder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/scroll_padding"/>
-    </ScrollView>
+    <!--<ScrollView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:background="@color/colorWhite"-->
+        <!--android:animateLayoutChanges="true"-->
+        <!--android:verticalScrollbarPosition="right">-->
+        <!--<LinearLayout-->
+            <!--android:id="@+id/layoutFolder"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="vertical"-->
+            <!--android:padding="@dimen/scroll_padding"/>-->
+    <!--</ScrollView>-->
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/folder_recycler_view"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </FrameLayout>

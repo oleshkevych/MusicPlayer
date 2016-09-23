@@ -16,6 +16,7 @@ public interface ISelectableFragment {
     List<String> getSelectedPlaylist();
     int getNumberOfPlaylist();
     void reloadForPlaylist();
+    boolean isAllSongsFragment();
 
 
 }
