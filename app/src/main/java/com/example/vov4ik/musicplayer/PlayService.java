@@ -166,6 +166,7 @@ public class PlayService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("Test", "Onstartcommand "+Thread.currentThread().getName());
         Log.d("Test", " "+path.toString());
 //        Log.d("test", "intent == "+ intent+" "+flags);
 //        Log.d("test", "intentACTION == "+ intent.getAction());
@@ -197,6 +198,7 @@ public class PlayService extends Service {
                 nextSong();
                 sendNotification(context);
             } else if (intent.getAction().equals(CLOSE_ACTION)) {
+                pausePlaying();
                 stopSelf();
                 sendNotification(context);
             }
@@ -573,7 +575,7 @@ public class PlayService extends Service {
 
 
         nm.notify(1, notification);
-        timer();
+
 //        }
     }
 
@@ -641,6 +643,7 @@ public class PlayService extends Service {
                         public void run() {
                             int incr=0;
                             while(true) {
+                                Log.d("Test","timer "+Thread.currentThread().getName());
                                 if (isPlayingNow()||player==null) {
                                     break;
                                 } else if (incr > 300000) {

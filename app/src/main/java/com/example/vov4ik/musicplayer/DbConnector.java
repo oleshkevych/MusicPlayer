@@ -41,24 +41,24 @@ public class DbConnector {
     }
 
     public void fillerForDb(Context context){
-//        String dirPath = Environment.getExternalStorageDirectory().getParentFile().getParent();
-//
-//        Log.d("Test", "START");
-//        File f = new File(dirPath);
-//        File[] files = f.listFiles();
-//        folderMethod(files);
-//        Log.d("Test", "ALL INCLUDE");
-//        folderAllIncludeMethod();
-//        Log.d("Test", "ALBUM");
-//        albumMethod();
-//        Log.d("Test", "ARTIST");
-//        artistMethod();
-//
-//        Log.d("Test", "DELETE");
-//        DbConnector.deleteDb(context);
-//        Log.d("Test", "FILL");
-//        new DbHelper(context).filler(folders, musicFiles, path, albums, pathAlbums, artists, pathArtist, mainFolders, pathForMainFolders);
-//        Log.d("Test", "FINISH");
+        String dirPath = Environment.getExternalStorageDirectory().getParentFile().getParent();
+
+        Log.d("Test", "START");
+        File f = new File(dirPath);
+        File[] files = f.listFiles();
+        folderMethod(files);
+        Log.d("Test", "ALL INCLUDE");
+        folderAllIncludeMethod();
+        Log.d("Test", "ALBUM");
+        albumMethod();
+        Log.d("Test", "ARTIST");
+        artistMethod();
+
+        Log.d("Test", "DELETE");
+        DbConnector.deleteDb(context);
+        Log.d("Test", "FILL");
+        new DbHelper(context).filler(folders, musicFiles, path, albums, pathAlbums, artists, pathArtist, mainFolders, pathForMainFolders);
+        Log.d("Test", "FINISH");
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP| Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -379,6 +379,9 @@ public class DbConnector {
     }
     public static List<TabConstructor> getAllTabs(Context context){
         return new DbTab(context).getAllTabs();
+    }
+    public static List<MusicFile> getMusicFilesForSearch(Context context){
+        return new DbHelper(context).getMusicFilesForSearch();
     }
 }
 ///////////////////////////////////For simple file manager

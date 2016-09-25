@@ -21,12 +21,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,12 +98,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            PlayService.pausePlaying();
 //        }
 
-        Log.d("Test", "ALL "+DbConnector.getAllTabs(getContext()).toString());
-        Log.d("Test", "VISIBLE "+DbConnector.getVisibleTabs(getContext()).toString());
-
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        assert toolbar != null;
+        ImageView search = (ImageView) toolbar.findViewById(R.id.search_icon);
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), SearchActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
 
         List<String> listOfMods = DbConnector.getVisibleTabs(getContext());  //{"Album","All Songs", "Artist",  "Folder(All Content)", "Folder","Playlist"};
 
@@ -112,9 +120,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (String s: listOfMods) {
             tabLayout.addTab(tabLayout.newTab().setText(s));
         }
-        tabLayout.setTabGravity(TabLayout.MODE_FIXED);
+//        tabLayout.setTabGravity(TabLayout.MODE_FIXED);
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        tabLayout.setTabGravity(TabLayout.SCROLL_INDICATOR_RIGHT);
+//        tabLayout.setTabGravity(TabLayout.SCROLL_INDICATOR_RIGHT);
 
         viewPager = (ViewPager) findViewById(R.id.pager);
         adapter = new PagerAdapter
@@ -168,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
                         getApplicationContext().startService(intent1);
                     }
+                    async = new FetchTask().execute();
                 }else{
                     PlayService.pausePlaying();
                 }
@@ -242,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 l[0].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 Intent intent = new Intent(getApplicationContext(), PlayerActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
         final Button shuffle = (Button) findViewById(R.id.shuffle);
@@ -314,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         progressWriter();
+        asyncStop = false;
         async = new FetchTask().execute();
     }
 
@@ -329,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int dur = PlayService.duration();
         int cur = PlayService.currentTime();
         song.setText(PlayService.trekName());
-        if(!PlayService.isPlayingNow()){
+        if(!PlayService.isPlayingNow()&&PlayService.trekName().equals("no - file")){
             String f = (DbConnector.getLastPlayList(getContext()).get(DbConnector.getLastPlayNumber(getContext())));
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(f);
@@ -414,7 +425,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void run() {
                             try {
-                                while (!isInterrupted()&&!asyncStop) {
+                                while (!isInterrupted()&&!asyncStop&&PlayService.isPlayingNow()) {
+                                    Log.d("Test", "MainActivity "+Thread.currentThread().getName());
                                     Thread.sleep(500);
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -443,7 +455,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onStop() {
+        asyncStop = true;
+        async.cancel(true);
+        if(!async.isCancelled()){
+            async.cancel(true);
+        }
+
+        super.onStop();
+    }
+
+    @Override
     protected void onResume(){
+        asyncStop = false;
+        async = new FetchTask().execute();
         super.onResume();
         buttonChanger();
     }
@@ -629,12 +654,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
 //        int interval = 180000;
 //        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
-
+        asyncStop = true;
         async.cancel(true);
         if(!async.isCancelled()){
             async.cancel(true);
         }
-
+        Thread.currentThread().interrupt();
+        finish();
         super.onDestroy();
     }
 }

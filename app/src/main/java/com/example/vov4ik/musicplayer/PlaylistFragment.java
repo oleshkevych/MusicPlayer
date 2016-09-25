@@ -148,7 +148,7 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
 //                intent.putExtra(EXTRA_FOR_CLICKED_FILE, path.get(numberOfPlaylist).get(position));
 //                intent.putExtra(EXTRA_FOR_PATHS, path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()]));
 
-                PlayService.setTrekNumber(position);
+                PlayService.setTrekNumber(position-1);
                 PlayService.setPath(path.get(numberOfPlaylist));
                 if(PlayService.getPlayer()!=null) {
                     PlayService.setLastPlayedTime(0);

@@ -229,6 +229,48 @@ public class DbHelper extends SQLiteOpenHelper {
         cursor.close();
         return searchingID;
     }
+    public List<MusicFile> getMusicFilesForSearch(){
+        open();
+        List<MusicFile> list = new ArrayList<>();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE, null);
+        cursor.moveToFirst();
+        Cursor c;
+        do{
+            if (!cursor.getString(0).equals("..goToRoot")) {
+                MusicFile m = new MusicFile();
+                m.setTitle(cursor.getString(0));
+                m.setPath(cursor.getString(1));
+            c = mDatabase.rawQuery("SELECT * FROM " + TABLE_FOLDER + " WHERE " + COLUMN_NAME_ID_FOLDER + " = " + String.valueOf(cursor.getInt(2)+1), null);
+//                String[] columns = new String[]{COLUMN_NAME_ID_FOLDER, COLUMN_FOLDER_NAME};
+//                String column = COLUMN_NAME_ID_FOLDER + "=?";
+//                String[] search = new String[]{String.valueOf(cursor.getInt(2))};
+//                c = mDatabase.query(TABLE_FOLDER,
+//                        columns,
+//                        column,
+//                        search,
+//                        null, null, null);
+                c.moveToFirst();
+                m.setFolder(c.getString(1));
+                c.close();
+                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM + " WHERE " + COLUMN_NAME_ID_ALBUM + " = " + String.valueOf(cursor.getInt(3)), null);
+                c.moveToFirst();
+                m.setAlbum(c.getString(1));
+                c.close();
+                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_ARTIST + " WHERE " + COLUMN_NAME_ID_ARTIST + " = " + String.valueOf(cursor.getInt(4)), null);
+                c.moveToFirst();
+                m.setArtist(c.getString(1));
+                c.close();
+                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER + " WHERE " + COLUMN_NAME_ID_MAIN_FOLDER + " = " + String.valueOf(cursor.getInt(5)), null);
+                c.moveToFirst();
+                m.setMainFolder(c.getString(1));
+                c.close();
+                list.add(m);
+            }
+        }while(cursor.moveToNext());
+
+        cursor.close();
+        return list;
+    }
     public List<String> getAllSongsPaths(){
         open();
         List<String> songs = new ArrayList<>();

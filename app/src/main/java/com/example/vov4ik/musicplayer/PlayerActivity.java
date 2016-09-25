@@ -673,6 +673,7 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 public void run() {
                     try {
                         while (!isInterrupted()&&!asyncStop&&playingNow!=null) {
+                            Log.d("Test", "PlayerService"+ Thread.currentThread().getName());
                             Thread.sleep(500);
                             runOnUiThread(new Runnable() {
 
@@ -918,6 +919,8 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             showViews();
             removeItemList = new ArrayList<String>();
         }else {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
             finish();
             super.onBackPressed();
         }

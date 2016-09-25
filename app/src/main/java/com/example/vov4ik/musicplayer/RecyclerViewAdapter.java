@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.io.File;
@@ -53,30 +54,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             if (vis) {
                 CheckBox c = (CheckBox) v.findViewById(R.id.checkBox);
                 String pos = String.valueOf(getPosition());
-                Log.d("Test", "Adapter p " + pos);
                 if (checked.contains(pos)) {
-                    Log.d("Test", "Adapter p remove " + pos);
 //                checked.remove(pos);
                     c.setChecked(false);
                 } else {
 
                     c.setChecked(true);
                 }
+            }else {
+                ma.onClick(getPosition());
             }
-            ma.onClick(getPosition());
-//            Log.d("Test", "Adapter " + checked.toString());
         }
 
+        public void onClick(View v, boolean isChecked) {
+            ma.onClick(getPosition());
+        }
         @Override
         public boolean onLongClick(View v) {
-////            checkBox.setVisibility(View.VISIBLE);
-//            CheckBox c = (CheckBox)v.findViewById(R.id.checkBox);
-//            String pos = String.valueOf(getPosition());
-//            Log.d("Test", "Adapter p "+pos);
-//                checked.remove(pos);
-//                c.setChecked(false);
             ma.onLongClick(getPosition());
-//            Log.d("Test", "Adapter "+checked.toString());
             return true;
         }
     }
@@ -89,29 +84,34 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.vis = vis;
         this.folderTrigger = folderTrigger;
         this.playlist = playlist;
-        if(!playlist) {
-            if (!folderTrigger) {
-                for (String[] s : path) {
-                    this.path.add((new File(s[1])).getParentFile().getPath());
-                }
-            } else {
-                this.path.add("");
+        try {
+            if (!playlist) {
+                if (!folderTrigger) {
+                    for (String[] s : path) {
+                        try {
+                            this.path.add((new File(s[1])).getParentFile().getPath());
+                        } catch (ArrayIndexOutOfBoundsException i) {
+//                        this.path.add((new File(s[0])).getParentFile().getPath());
+                        }
+                    }
+                } else {
+                    this.path.add("");
 
-                for (int i =1; i<path.get(folderNumber).length; i++) {
-                    this.path.add((new File(path.get(folderNumber)[i])).getParentFile().getPath());
+                    for (int i = 1; i < path.get(folderNumber).length; i++) {
+                        this.path.add((new File(path.get(folderNumber)[i])).getParentFile().getPath());
+                    }
+                }
+            } else if (folderTrigger) {
+                this.path.add("");
+                for (int i = 1; i < path.get(0).length; i++) {
+                    this.path.add((new File(path.get(0)[i])).getParentFile().getPath());
                 }
             }
-        }else if(folderTrigger){
-            this.path.add("");
-            for (int i =1; i<path.get(0).length; i++) {
-                this.path.add((new File(path.get(0)[i])).getParentFile().getPath());
-            }
+        }catch (NullPointerException n){
+            Log.d("Test", n.getMessage());
         }
     }
-//    public void updateList(List<String> checked) {
-//        this.checked = checked;
-//        notifyDataSetChanged();
-//    }
+
     // Create new views (invoked by the layout manager)
     @Override
     public RecyclerViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -122,22 +122,33 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return vh;
     }
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
 
         try {
             holder.names.setText(musicFiles.get(position));
             if (!playlist) {
                 holder.path.setText(path.get(position));
+                if(PlayService.isPlayingNow()&&path.get(position).equals(PlayService.playingFile)){
+                    holder.mView.setBackground(context.getResources().getDrawable(R.drawable.playing_background));
+                }
             } else if (folderTrigger) {
                 holder.path.setText(path.get(position));
             }
+            holder.checkBox.setOnCheckedChangeListener(null);
             holder.checkBox.setChecked(checked.contains(String.valueOf(position)));
+            holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                    if (vis) {
+                        holder.onClick(buttonView, isChecked);
+                    }
+                }
+            });
         }catch(IndexOutOfBoundsException i){
             Log.d("Test", i.getMessage());
         }
-        if(PlayService.isPlayingNow()&&path.get(position) == PlayService.playingFile){
-            holder.mView.setBackground(context.getResources().getDrawable(R.drawable.playing_background));
-        }
+
 
 //        mAdapter. notifyItemInserted(Integer.parseInt(position));
 

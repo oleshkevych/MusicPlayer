@@ -71,10 +71,6 @@ public class RecyclerAdapterForTabsActivity extends RecyclerView.Adapter<Recycle
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
                 holder.onClick(buttonView, isChecked);
-//                Log.d("Test", buttonView.getId()+"");
-//                Log.d("Test", buttonView.getLayout().getLineCount()+"");
-
-
             }
         });
 

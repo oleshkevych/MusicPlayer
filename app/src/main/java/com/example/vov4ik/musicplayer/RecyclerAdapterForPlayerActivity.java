@@ -2,11 +2,11 @@ package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import java.io.File;
@@ -52,30 +52,25 @@ public class RecyclerAdapterForPlayerActivity extends RecyclerView.Adapter<Recyc
             if (vis) {
                 CheckBox c = (CheckBox) v.findViewById(R.id.checkBox);
                 String pos = String.valueOf(getPosition());
-                Log.d("Test", "Adapter p " + pos);
                 if (checked.contains(pos)) {
-                    Log.d("Test", "Adapter p remove " + pos);
-//                checked.remove(pos);
                     c.setChecked(false);
                 } else {
 
                     c.setChecked(true);
                 }
+            }else {
+                ma.onClick(getPosition());
             }
+        }
+
+        public void onClick(View v, boolean isChecked) {
             ma.onClick(getPosition());
-//            Log.d("Test", "Adapter " + checked.toString());
         }
 
         @Override
         public boolean onLongClick(View v) {
-//
-//            CheckBox c = (CheckBox)v.findViewById(R.id.checkBox);
-//            String pos = String.valueOf(getPosition());
-//            Log.d("Test", "Adapter p "+pos);
-////            checked.remove(pos);
-//            c.setChecked(true);
+
             ma.onLongClick(getPosition());
-//            Log.d("Test", "Adapter " + checked.toString());
             return true;
         }
     }
@@ -105,7 +100,7 @@ public class RecyclerAdapterForPlayerActivity extends RecyclerView.Adapter<Recyc
         return vh;
     }
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
 
         holder.names.setText(musicFiles.get(position));
         holder.path.setText(path.get(position));
@@ -116,7 +111,17 @@ public class RecyclerAdapterForPlayerActivity extends RecyclerView.Adapter<Recyc
         if(PlayService.isPlayingNow()&&position == PlayService.getTrekNumber()){
             holder.mView.setBackground(context.getResources().getDrawable(R.drawable.playing_background));
         }
+        holder.checkBox.setOnCheckedChangeListener(null);
+        holder.checkBox.setChecked(checked.contains(String.valueOf(position)));
+        holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
+                if(vis) {
+                    holder.onClick(buttonView, isChecked);
+                }
+            }
+        });
 
 //        mAdapter. notifyItemInserted(Integer.parseInt(position));
 

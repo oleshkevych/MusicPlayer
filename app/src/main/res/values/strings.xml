@@ -1,11 +1,17 @@
 <resources>
-    <string name="app_name">MusicPlayer</string>
+    <string name="app_name">Music Player</string>
 
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
-    <string name="title_activity_player">PlayerActivity</string>
+    <string name="search_artist">Artist</string>
+    <string name="search_album">Album</string>
+    <string name="search_song">Song</string>
+    <string name="title_activity_player">Player</string>
+    <string name="title_activity_search">Search</string>
+    <string name="hint_for_search">Start entering…</string>
+    <string name="search_artist_text_field">Artist</string>
+    <string name="search_album_text_field">Album</string>
+    <string name="search_song_text_field">Song</string>
 </resources>

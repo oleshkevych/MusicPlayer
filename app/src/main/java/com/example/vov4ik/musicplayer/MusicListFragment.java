@@ -154,7 +154,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
 //                intent.putExtra(EXTRA_FOR_CLICKED_FILE, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[(position)]);
 //                intent.putExtra(EXTRA_FOR_PATHS, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()));
 //                startActivity(intent);
-                PlayService.setTrekNumber(position);
+                PlayService.setTrekNumber(position-1);
                 PlayService.setPath(Arrays.asList(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())));
                 if(PlayService.getPlayer()!=null) {
                     PlayService.setLastPlayedTime(0);
