@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -97,26 +97,26 @@ public class FolderAllIncludeFragment extends MusicListFragment {//implements Vi
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_folder_all_include, container, false));
         getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.folder_all_include_recycler_view));
         getMusicItemsList().setCheckingTrigger(false);
-        getMusicItemsList().setPath(DbConnector.getMainFoldersPathsFromDb(getContext()));
-        getMusicItemsList().setFolderName(DbConnector.getMainFoldersFromDb(getContext()));
-        getMusicItemsList().setMusicFiles(DbConnector.getMainFoldersNamesFromDb(getContext()));
-//        for(File f: parentFileForAll.listFiles()){
-//            mainPath.add(f.getPath());
-//        }
-//
-//        for(int i = 0; i<path.size(); i++){
-//            String[] pathArray = path.get(i);
-//
-//            for(String s: pathArray){
-//                setStringPath(s);
-//                File file = new File(s);
-//                if (file.isDirectory()){
-//                    Log.d("Test", "DIRECTORY "+file.getName());
-//                }else {
-//                    getParent(s);
-//                }
-//            }
-//        }
+
+        List<String> names = DbConnector.getMainFoldersFromDb(getContext());
+        List<List<String>> m = DbConnector.getFileNamesForMainFolders(getContext());
+        List<List<String>> p = DbConnector.getPathsForMainFolders(getContext());
+        List<String> n = new ArrayList<>();
+        List<List<String>> p1 = new ArrayList<>();
+        List<List<String>> m1 = new ArrayList<>();
+        for(int i = 0; i < names.size(); i++){
+            n.add(names.get(i));
+        }
+        Collections.sort(names);
+        for(int i = 0; i < names.size(); i++){
+            int index = n.indexOf(names.get(i));
+            p1.add(p.get(index));
+            m1.add(m.get(index));
+        }
+
+        getMusicItemsList().setFolderName(names);
+        getMusicItemsList().setPath(p1);
+        getMusicItemsList().setMusicFiles(m1);
         show(getMusicItemsList().getFolderName());
         return getMusicItemsList().getRootView();
     }
@@ -281,7 +281,7 @@ public class FolderAllIncludeFragment extends MusicListFragment {//implements Vi
         if((!menuVisible)&&(getMusicItemsList().getRootView()!=null)){
             getMusicItemsList().setCheckingTrigger(false);
             if(getMusicItemsList().isFolderTrigger()) {
-                show(Arrays.asList(getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
+                show((getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
             }else {
                 show(getMusicItemsList().getFolderName());
             }

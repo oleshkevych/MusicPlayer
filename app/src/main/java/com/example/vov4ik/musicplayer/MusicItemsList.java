@@ -18,8 +18,8 @@ public class MusicItemsList {
     private List<String> selectedPaths = new ArrayList<String>();
     private View rootView;
     private List<String> folderName = null;
-    private List<String[]> path = null;
-    private List<String[]> musicFiles = null;
+    private List<List<String>> path = null;
+    private List<List<String>> musicFiles = null;
     private boolean folderTrigger = false;
     private int numberOfFolder;
     private List<String> selectedPlaylist = new ArrayList<String>();
@@ -93,11 +93,11 @@ public class MusicItemsList {
         this.selectedPlaylist.remove(selectedPlaylist);
     }
 
-    public List<String[]> getPath() {
+    public List<List<String>> getPath() {
         return path;
     }
 
-    public void setPath(List<String[]> path) {
+    public void setPath(List<List<String>> path) {
         this.path = path;
     }
 
@@ -125,11 +125,11 @@ public class MusicItemsList {
         this.folderTrigger = folderTrigger;
     }
 
-    public List<String[]> getMusicFiles() {
+    public List<List<String>> getMusicFiles() {
         return musicFiles;
     }
 
-    public void setMusicFiles(List<String[]> musicFiles) {
+    public void setMusicFiles(List<List<String>> musicFiles) {
         this.musicFiles = musicFiles;
     }
 

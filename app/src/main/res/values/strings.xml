@@ -14,4 +14,5 @@
     <string name="search_artist_text_field">Artist</string>
     <string name="search_album_text_field">Album</string>
     <string name="search_song_text_field">Song</string>
+    <string name="title_activity_mmmmmain2">MMMMMain2Activity</string>
 </resources>

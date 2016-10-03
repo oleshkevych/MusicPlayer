@@ -303,15 +303,21 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             public void onClick(View v) {
                 l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(!PlayService.isPlayingNow()){
-                    if(PlayService.getPlayer()!=null) {
-                        PlayService.startPlaying();
-                    } else {
-                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                        intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
-                        getApplicationContext().startService(intent1);
-                    }
+//                    if(PlayService.getPlayer()!=null) {
+//                        PlayService.startPlaying();
+//                    } else {
+//                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+//                        intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+//                        getApplicationContext().startService(intent1);
+//                    }
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction(PlayService.PLAY_ACTION);
+                    getApplicationContext().startService(intent1);
                 }else{
-                    PlayService.pausePlaying();
+//                    PlayService.pausePlaying();
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction(PlayService.PAUSE_ACTION);
+                    getApplicationContext().startService(intent1);
                 }
                 buttonChanger();
                 progressWriter();
@@ -330,13 +336,16 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(View v) {
                 l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                if(PlayService.getPlayer()!=null) {
-                    PlayService.nextSong();
-                } else {
-                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
-                    getApplicationContext().startService(intent1);
-                }
+//                if(PlayService.getPlayer()!=null) {
+//                    PlayService.nextSong();
+//                } else {
+//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
+//                    getApplicationContext().startService(intent1);
+//                }
+                Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                intent1.setAction(PlayService.NEXT_ACTION);
+                getApplicationContext().startService(intent1);
                 progressWriter();
 
 
@@ -355,13 +364,16 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(View v) {
                 l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                if(PlayService.getPlayer()!=null) {
-                    PlayService.previous();
-                } else {
-                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
-                    getApplicationContext().startService(intent1);
-                }
+//                if(PlayService.getPlayer()!=null) {
+//                    PlayService.previous();
+//                } else {
+//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
+//                    getApplicationContext().startService(intent1);
+//                }
+                Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                intent1.setAction(PlayService.PREV_ACTION);
+                getApplicationContext().startService(intent1);
                 progressWriter();
 
             }
@@ -439,7 +451,10 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
                 if (PlayService.getPlayer() != null) {
                     PlayService.setLastPlayedTime(progressChanged);
                     if (PlayService.isPlayingNow()) {
-                        PlayService.startPlaying();
+                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                        intent1.setAction(PlayService.PLAY_ACTION);
+                        getApplicationContext().startService(intent1);
+//                        PlayService.startPlaying();
                     }
                 } else {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
@@ -867,18 +882,19 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 //                    v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
                 }
             } else {
-                //clickedFile = path.get(v.getId());
                 PlayService.setLastPlayedTime(0);
-                //PlayService.setPlayingFile(clickedFile);
                 PlayService.setTrekNumber(position);
-                if(PlayService.getPlayer()!=null) {
-                    PlayService.startPlaying();
-                } else {
-                    Intent intent1 = new Intent(this, PlayService.class);
-                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
-                    intent1.putExtra("NUMBER", position);
-                    startService(intent1);
-                }
+//                if(PlayService.getPlayer()!=null) {
+//                    PlayService.startPlaying();
+//                } else {
+//                    Intent intent1 = new Intent(this, PlayService.class);
+//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+//                    intent1.putExtra("NUMBER", position);
+//                    startService(intent1);
+//                }
+                Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                intent1.setAction(PlayService.PLAY_ACTION);
+                getApplicationContext().startService(intent1);
 //                showViews();
             }
         }

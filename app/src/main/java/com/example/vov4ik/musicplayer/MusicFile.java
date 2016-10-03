@@ -71,5 +71,15 @@ public class MusicFile {
     public MusicFile() {
     }
 
-
+    @Override
+    public String toString() {
+        return "MusicFile{" +
+                "album='" + album + '\'' +
+                ", title='" + title + '\'' +
+                ", path='" + path + '\'' +
+                ", artist='" + artist + '\'' +
+                ", folder='" + folder + '\'' +
+                ", mainFolder='" + mainFolder + '\'' +
+                '}';
+    }
 }

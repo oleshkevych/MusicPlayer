@@ -100,31 +100,43 @@ public class HeadphonesClickReceiver extends BroadcastReceiver {
                             // single click *******************************
                             if (d == 1) {
                                 Toast.makeText(context, "single click!", Toast.LENGTH_SHORT).show();
-                                if (PlayService.getPlayer() != null) {
+//                                if (PlayService.getPlayer() != null) {
                                     if (PlayService.isPlayingNow()) {
-                                        PlayService.pausePlaying();
+//                                        PlayService.pausePlaying();
+                                        Intent intent1 = new Intent(context, PlayService.class);
+                                        intent1.setAction(PlayService.PAUSE_ACTION);
+                                        context.startService(intent1);
                                     } else {
-                                        PlayService.startPlaying();
+//                                        PlayService.startPlaying();
+                                        Intent intent1 = new Intent(context, PlayService.class);
+                                        intent1.setAction(PlayService.PLAY_ACTION);
+                                        context.startService(intent1);
                                     }
-                                } else {
-                                    Intent intent1 = new Intent(context, PlayService.class);
-                                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
-                                    context.startService(intent1);
-                                }
+//                                } else {
+//                                    Intent intent1 = new Intent(context, PlayService.class);
+//                                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+//                                    context.startService(intent1);
+//                                }
                             }
                             // double click *********************************
                             if (d == 2) {
                                 Toast.makeText(context, "Double click!!", Toast.LENGTH_SHORT).show();
-                                if (PlayService.getPlayer() != null) {
-                                    PlayService.myLastPressTime = 0;
-                                    PlayService.nextSong();
-                                }
+//                                if (PlayService.getPlayer() != null) {
+                                Intent intent1 = new Intent(context, PlayService.class);
+                                intent1.setAction(PlayService.NEXT_ACTION);
+                                context.startService(intent1);
+                                    PlayService.setLastPlayedTime(0);
+//                                    PlayService.nextSong();
+//                                }
                             }
                             if (d == 3) {
                                 Toast.makeText(context, "Thre clicks!!", Toast.LENGTH_SHORT).show();
-                                if (PlayService.getPlayer() != null) {
-                                    PlayService.previous();
-                                }
+//                                if (PlayService.getPlayer() != null) {
+//                                    PlayService.previous();
+//                                }
+                                Intent intent1 = new Intent(context, PlayService.class);
+                                intent1.setAction(PlayService.PREV_ACTION);
+                                context.startService(intent1);
                             }
                             d = 0;
                         }

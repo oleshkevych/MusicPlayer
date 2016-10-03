@@ -1,6 +1,7 @@
 package com.example.vov4ik.musicplayer;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,20 +48,32 @@ public class RecyclerAdapterForSearchArtists extends RecyclerView.Adapter<Recycl
     public RecyclerAdapterForSearchArtists(SearchActivity activity, List<MusicFile> musicFiles, String type, String enteredText) {
         if(type.equals("Artists")) {
             for (MusicFile m : musicFiles) {
-                if (!list.contains(m.getArtist())&&(m.getArtist().toLowerCase().contains(enteredText.toLowerCase()))) {
-                    this.list.add(m.getArtist());
+                try {
+                    if ((m.getAlbum()!=null)&&!list.contains(m.getArtist()) && (m.getArtist().toLowerCase().contains(enteredText.toLowerCase()))) {
+                        this.list.add(m.getArtist());
+                    }
+                }catch(NullPointerException n){
+                    Log.d("Error", n.getMessage());
                 }
             }
         }else if(type.equals("Albums")){
             for (MusicFile m : musicFiles) {
-                if (!list.contains(m.getAlbum())&&(m.getAlbum().toLowerCase().contains(enteredText.toLowerCase()))) {
-                    this.list.add(m.getAlbum());
+                try {
+                    if ((m.getAlbum()!=null)&&!list.contains(m.getAlbum()) && (m.getAlbum().toLowerCase().contains(enteredText.toLowerCase()))) {
+                        this.list.add(m.getAlbum());
+                    }
+                }catch(NullPointerException n){
+                    Log.d("Error", n.getMessage());
                 }
             }
         }else if(type.equals("Songs")){
             for (MusicFile m : musicFiles) {
-                if (!list.contains(m.getTitle())&&(m.getTitle().toLowerCase().contains(enteredText.toLowerCase()))) {
-                    this.list.add(m.getTitle());
+                try {
+                    if (!list.contains(m.getTitle()) && (m.getTitle().toLowerCase().contains(enteredText.toLowerCase()))) {
+                        this.list.add(m.getTitle());
+                    }
+                }catch(NullPointerException n){
+                    Log.d("Error", n.getMessage());
                 }
             }
         }

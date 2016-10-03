@@ -10,9 +10,11 @@ import android.util.Log;
 public class PhoneCallReceiver extends BroadcastReceiver {
         private static TelephonyManager telManager;
     private static boolean trigger = false;
+    private static Context context;
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("test", "CALL_STATE_STARTED");
+        PhoneCallReceiver.context = context;
         PhoneCallReceiver.telManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (PlayService.isPlayingNow()||trigger) {
             PhoneCallReceiver.telManager.listen(PhoneCallReceiver.phoneListener, PhoneStateListener.LISTEN_CALL_STATE);
@@ -37,14 +39,20 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                 try {
                     switch (state) {
                         case TelephonyManager.CALL_STATE_RINGING: {
-                            PlayService.pausePlaying();
+//                            PlayService.pausePlaying();
+                            Intent intent1 = new Intent(context, PlayService.class);
+                            intent1.setAction(PlayService.PAUSE_ACTION);
+                            context.startService(intent1);
                             Log.d("test", "CALL_STATE_RINGING");
                             trigger = true;
                             break;
                         }
                         case TelephonyManager.CALL_STATE_OFFHOOK: {
                             if (PlayService.isPlayingNow()) {
-                                PlayService.pausePlaying();
+//                                PlayService.pausePlaying();
+                                Intent intent1 = new Intent(context, PlayService.class);
+                                intent1.setAction(PlayService.PAUSE_ACTION);
+                                context.startService(intent1);
                                 trigger = true;
                             }
                             Log.d("test", "CALL_STATE_OFFHOOK");
@@ -53,7 +61,10 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                         }
                         case TelephonyManager.CALL_STATE_IDLE: {
                             if(trigger) {
-                                PlayService.startPlaying();
+//                                PlayService.startPlaying();
+                                Intent intent1 = new Intent(context, PlayService.class);
+                                intent1.setAction(PlayService.PLAY_ACTION);
+                                context.startService(intent1);
                                 trigger = false;
                             }
                             Log.d("test",  "CALL_STATE_IDLE");

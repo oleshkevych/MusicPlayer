@@ -3,11 +3,14 @@ package com.example.vov4ik.musicplayer;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class FolderFragment extends MusicListFragment {//implements View.OnClickListener, View.OnLongClickListener {
 
@@ -91,11 +94,28 @@ public class FolderFragment extends MusicListFragment {//implements View.OnClick
                              Bundle savedInstanceState) {
         getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_folder, container, false));
         getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.folder_recycler_view));
-        //linearLayout = getMusicItemsList().getLinearLayout(); // TODO: Refactor this
         getMusicItemsList().setCheckingTrigger(false);
-        getMusicItemsList().setFolderName(DbConnector.getFoldersFromDb(getContext()));
-        getMusicItemsList().setPath(DbConnector.getPathsFromDb(getContext()));
-        getMusicItemsList().setMusicFiles(DbConnector.getFilesNamesFromDb(getContext()));
+
+        List<String> names = DbConnector.getFoldersFromDb(getContext());
+        List<List<String>> m = DbConnector.getFilesNamesForFolders(getContext());
+        List<List<String>> p = DbConnector.getPathsForFolders(getContext());
+        List<String> n = new ArrayList<>();
+        List<List<String>> p1 = new ArrayList<>();
+        List<List<String>> m1 = new ArrayList<>();
+        for(int i = 0; i < names.size(); i++){
+            n.add(names.get(i));
+        }
+        Collections.sort(names);
+        Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
+        for(int i = 0; i < names.size(); i++){
+            int index = n.indexOf(names.get(i));
+            p1.add(p.get(index));
+            m1.add(m.get(index));
+        }
+
+        getMusicItemsList().setFolderName(names);
+        getMusicItemsList().setPath(p1);
+        getMusicItemsList().setMusicFiles(m1);
         show(getMusicItemsList().getFolderName());
         return getMusicItemsList().getRootView();
     }
@@ -121,7 +141,7 @@ public class FolderFragment extends MusicListFragment {//implements View.OnClick
         if((!menuVisible)&&(getMusicItemsList().getRootView()!=null)){
             getMusicItemsList().setCheckingTrigger(false);
             if(getMusicItemsList().isFolderTrigger()) {
-                show(Arrays.asList(getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
+                show((getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())));
             }else {
                 show(getMusicItemsList().getFolderName());
             }

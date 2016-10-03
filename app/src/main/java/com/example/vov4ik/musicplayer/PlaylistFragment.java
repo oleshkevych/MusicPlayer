@@ -99,19 +99,19 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
                 for(String s: newPath) {
                     getMusicItemsList().setSelectedPaths(s);
                 }
-                List<String[]> arrayList = new ArrayList<>();
+                List<List<String>> arrayList = new ArrayList<>();
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, playlistNames,
                         arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext());
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             } else if (position != 0) {
                 getMusicItemsList().setNumberOfPlaylist(numberOfPlaylist + 10);
                 getMusicItemsList().setSelectedPaths(path.get(numberOfPlaylist).get(position));
-                List<String[]> arrayList = new ArrayList<>();
-                arrayList.add(getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()).toArray(new String[getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()).size()]));
+                List<List<String>> arrayList = new ArrayList<>();
+                arrayList.add(getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()));
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, filesName.get(numberOfPlaylist),
                         arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext());
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             }
         }
@@ -150,15 +150,18 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
 
                 PlayService.setTrekNumber(position-1);
                 PlayService.setPath(path.get(numberOfPlaylist));
-                if(PlayService.getPlayer()!=null) {
-                    PlayService.setLastPlayedTime(0);
-                    PlayService.startPlaying();
-                } else {
-                    Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
-                    MainActivity.getContext().startService(intent1);
-                    PlayService.setLastPlayedTime(0);
-                    PlayService.startPlaying();
-                }
+//                if(PlayService.getPlayer()!=null) {
+//                    PlayService.setLastPlayedTime(0);
+//                    PlayService.startPlaying(path.get(numberOfPlaylist).get(position));
+//                } else {
+                PlayService.setLastPlayedTime(0);
+                PlayService.setClickedOnTheSong(true);
+                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                intent1.setAction(PlayService.PLAY_ACTION);
+                intent1.putExtra("CLICKED_SONG", path.get(numberOfPlaylist).get(position));
+                MainActivity.getContext().startService(intent1);
+//                    PlayService.startPlaying(path.get(numberOfPlaylist).get(position));
+//                }
 //                if(isAdded()) {
 //                    startActivity(intent);
 //                }else{

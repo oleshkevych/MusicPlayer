@@ -3,6 +3,7 @@ package com.example.vov4ik.musicplayer;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.database.CursorIndexOutOfBoundsException;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
@@ -12,6 +13,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -49,6 +51,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean asyncStop = false;
     public static List<String> playlistList = new ArrayList<>();
     private static Context context;
+    private boolean backgroundExecuteTrigger = false;
+
 
     public static PagerAdapter getAdapter() {
         return adapter;
@@ -73,11 +77,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_main);
 
-//        List<TabConstructor> t = new ArrayList<>();
-//        for(String s:TabConstructor.getListOfTabs()){
-//            t.add(new TabConstructor(s, true));
-//        }
-//        DbConnector.tabsFiller(context, t);
+//        new DbConnector().fillerForDb(getContext());
+
 
 
         if(PlayService.getPlayer()==null) {
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent1 = new Intent(this, AutoAudioStopper.class);
             startService(intent1);
 
-            AudioManager am = (AudioManager) getApplicationContext().getSystemService(context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) getApplicationContext().getSystemService(AUDIO_SERVICE);
 
             AutoAudioStopper.getInstance().setAudioManager(am);
             AutoAudioStopper.getInstance().setContext(this);
@@ -98,6 +99,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            PlayService.pausePlaying();
 //        }
 
+        asyncStop = false;
+        if(!backgroundExecuteTrigger) {
+            async = new FetchTask().execute();
+        }
+        if(getIntent()!=null) {
+            Log.d("Test", "Main A INTENT!!!!!");
+            String intentAction = getIntent().getAction();
+            if (Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
+                Log.d("Test", "Media_Button");
+                KeyEvent event = (KeyEvent) getIntent()
+                        .getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                Log.d("Test", "Media_Button"+event.getAction());
+                Log.d("Test", "Media_Button"+event.getKeyCode());
+
+            }
+
+        }
+        if(getIntent()!=null&&getIntent().getStringExtra("command")!=null) {
+            Log.d("Test", "Main A "+getIntent().getStringExtra("command"));
+        }
+        if(getIntent()!=null&&getIntent().getData()!=null) {
+            Intent intent = new Intent(this, PlayerActivity.class);
+            startActivity(intent);
+            Intent intent1 = new Intent(this, PlayService.class);
+            List<String> l = new ArrayList<>();
+            l.add(getIntent().getData().getPath());
+            PlayService.setPath(l);
+            PlayService.setTrekNumber(0);
+            PlayService.setLastPlayedTime(0);
+            PlayService.setClickedOnTheSong(true);
+            intent1.putExtra("CLICKED_SONG", getIntent().getData().getPath());
+            intent1.setAction(PlayService.PLAY_ACTION);
+            startService(intent1);
+            finish();
+        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -111,10 +147,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
             }
         });
-
-
-        List<String> listOfMods = DbConnector.getVisibleTabs(getContext());  //{"Album","All Songs", "Artist",  "Folder(All Content)", "Folder","Playlist"};
-
+        List<String> listOfMods;
+        try {
+            listOfMods = DbConnector.getVisibleTabs(getContext());  //{"Album","All Songs", "Artist",  "Folder(All Content)", "Folder","Playlist"};
+        }catch(CursorIndexOutOfBoundsException c){
+            listOfMods = TabConstructor.getListOfTabs();
+        }
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         assert tabLayout != null;
         for (String s: listOfMods) {
@@ -168,17 +206,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View v) {
                 l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(!PlayService.isPlayingNow()){
-                    if(PlayService.getPlayer()!=null) {
-                        PlayService.startPlaying();
-
-                    } else {
+//                    if(PlayService.getPlayer()!=null) {
+//                        PlayService.startPlaying();
+//
+//                    } else {
                         Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                        intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
+                        intent1.setAction(PlayService.PLAY_ACTION);
                         getApplicationContext().startService(intent1);
-                    }
-                    async = new FetchTask().execute();
+//                    }
                 }else{
-                    PlayService.pausePlaying();
+//                    PlayService.pausePlaying();
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction(PlayService.PAUSE_ACTION);
+                    getApplicationContext().startService(intent1);
                 }
                 buttonChanger();
                 progressWriter();
@@ -199,14 +239,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View v) {
                 l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(PlayService.getPlayer()!=null) {
-                        PlayService.nextSong();
-                } else {
+//                        PlayService.nextSong();
+//                } else {
+//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
+//                    getApplicationContext().startService(intent1);
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
+                    intent1.setAction(PlayService.NEXT_ACTION);
                     getApplicationContext().startService(intent1);
                 }
                 progressWriter();
-
 
             }
         });
@@ -224,16 +266,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View v) {
                 l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
                 if(PlayService.getPlayer()!=null) {
-
-                        PlayService.previous();
-
-                } else {
+//
+//                        PlayService.previous();
+//
+//                } else {
+//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
+//                    getApplicationContext().startService(intent1);
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
+                    intent1.setAction(PlayService.PREV_ACTION);
                     getApplicationContext().startService(intent1);
                 }
                 progressWriter();
-
             }
         });
         Button showPlaylist = (Button) findViewById(R.id.openPlayerList);
@@ -286,13 +330,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         assert seekBar != null;
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progressChanged;
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser){
+                if (fromUser) {
                     TextView currentTime = (TextView) findViewById(R.id.current_time);
                     assert currentTime != null;
 
-                    String current =  progress/ 60000 + " : " + (((progress / 1000) % 60 > 10) ? ((progress / 1000) % 60) : ("0" + (progress / 1000) % 60));
+                    String current = progress / 60000 + " : " + (((progress / 1000) % 60 > 10) ? ((progress / 1000) % 60) : ("0" + (progress / 1000) % 60));
                     currentTime.setText(current);
 
                     seekBar.setProgress(progress);
@@ -310,13 +355,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 asyncStop = false;
-                async = new FetchTask().execute();
-                if(PlayService.getPlayer()!=null) {
+                if (!backgroundExecuteTrigger) {
+                    async = new FetchTask().execute();
+                }
+                if (PlayService.getPlayer() != null) {
                     PlayService.setLastPlayedTime(progressChanged);
-                    if(PlayService.isPlayingNow()) {
-                        PlayService.startPlaying();
+                    if (PlayService.isPlayingNow()) {
+//                       PlayService.startPlaying();
+                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                        intent1.setAction(PlayService.PLAY_ACTION);
+                        getApplicationContext().startService(intent1);
                     }
-                } else{
+                } else {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                     getApplicationContext().startService(intent1);
                     PlayService.setLastPlayedTime(progressChanged);
@@ -325,7 +375,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         progressWriter();
         asyncStop = false;
-        async = new FetchTask().execute();
+        if(!backgroundExecuteTrigger) {
+            async = new FetchTask().execute();
+        }
     }
 
     private void progressWriter(){
@@ -340,15 +392,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int dur = PlayService.duration();
         int cur = PlayService.currentTime();
         song.setText(PlayService.trekName());
-        if(!PlayService.isPlayingNow()&&PlayService.trekName().equals("no - file")){
-            String f = (DbConnector.getLastPlayList(getContext()).get(DbConnector.getLastPlayNumber(getContext())));
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(f);
-            String artist = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-            String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-            song.setText(artist+" - "+ title);
-            dur = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-            cur = DbConnector.getLastPlayTime(getContext());
+        if(!PlayService.isPlayingNow()&&(PlayService.trekName().equals("no - file")||PlayService.trekName().equals("null - null"))){
+            try {
+                String f = (DbConnector.getLastPlayList(getContext()).get(DbConnector.getLastPlayNumber(getContext())));
+                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                mmr.setDataSource(f);
+                String artist = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+                String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+                song.setText(artist + " - " + title);
+                dur = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                cur = DbConnector.getLastPlayTime(getContext());
+            }catch(CursorIndexOutOfBoundsException c){
+                Log.d("Error", c.getMessage());
+            }
         }
 
 
@@ -385,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    InputMethodManager imm = (InputMethodManager)getSystemService(context.INPUT_METHOD_SERVICE);
+                    InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     if(MainActivity.playlistList.contains(editText.getText().toString())){
                         Toast.makeText(getApplicationContext(), "This name exist!!", Toast.LENGTH_SHORT).show();
@@ -425,7 +481,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void run() {
                             try {
-                                while (!isInterrupted()&&!asyncStop&&PlayService.isPlayingNow()) {
+                                backgroundExecuteTrigger = true;
+                                while (!isInterrupted()&&!asyncStop) {
                                     Log.d("Test", "MainActivity "+Thread.currentThread().getName());
                                     Thread.sleep(500);
                                     runOnUiThread(new Runnable() {
@@ -450,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected void onPostExecute(Void aVoid) {
-
+            backgroundExecuteTrigger = false;
         }
     }
 
@@ -468,7 +525,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume(){
         asyncStop = false;
-        async = new FetchTask().execute();
+        if(!backgroundExecuteTrigger) {
+            async = new FetchTask().execute();
+        }
         super.onResume();
         buttonChanger();
     }

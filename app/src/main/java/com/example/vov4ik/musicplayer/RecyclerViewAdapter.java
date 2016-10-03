@@ -18,7 +18,7 @@ import java.util.List;
  * Created by vov4ik on 9/11/2016.
  */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-    private List<String> musicFiles;
+    private List<String> musicFiles = new ArrayList<>();;
     private List<String> path = new ArrayList<>();
     private List<String> checked;
     private MusicListFragment ma;
@@ -75,10 +75,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             return true;
         }
     }
-    public RecyclerViewAdapter(MusicListFragment ma, List<String> musicFiles, List<String[]> path, List<String> checked, boolean vis, boolean folderTrigger,
-                               int folderNumber, boolean playlist, Context context) {
+
+    public RecyclerViewAdapter(MusicListFragment ma, List<String> musicFiles, List<List<String>> paths, List<String> checked, boolean vis, boolean folderTrigger,
+                               int folderNumber, boolean playlist, Context context, boolean isAllSongsFragment) {
         this.context = context;
-        this.musicFiles = musicFiles;
         this.checked = checked;
         this.ma = ma;
         this.vis = vis;
@@ -86,28 +86,54 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.playlist = playlist;
         try {
             if (!playlist) {
+                Log.d("Test", "1");
                 if (!folderTrigger) {
-                    for (String[] s : path) {
+                    Log.d("Test", "2");
+                    this.musicFiles = musicFiles;
+                    for (List<String> s : paths) {
                         try {
-                            this.path.add((new File(s[1])).getParentFile().getPath());
-                        } catch (ArrayIndexOutOfBoundsException i) {
+                            this.path.add((new File(s.get(0))).getParentFile().getPath());
+                        } catch (IndexOutOfBoundsException i) {
+
 //                        this.path.add((new File(s[0])).getParentFile().getPath());
                         }
                     }
                 } else {
-                    this.path.add("");
-
-                    for (int i = 1; i < path.get(folderNumber).length; i++) {
-                        this.path.add((new File(path.get(folderNumber)[i])).getParentFile().getPath());
+                    Log.d("Test", "3");
+                    if(!isAllSongsFragment) {
+                        Log.d("Test", "4");
+                        this.path.add(0, "..goToRoot");
+                        this.musicFiles.add(0, "..goToRoot");
                     }
+                    for (int i = 0; i < paths.get(folderNumber).size(); i++) {
+                        try {
+                            this.path.add((new File(paths.get(folderNumber).get(i))).getParentFile().getPath());
+                        }catch (NullPointerException e){
+
+                            Log.d("NULL", paths.get(folderNumber).get(i));
+                            Log.d("NULL", folderNumber+"ERROR");
+                        }
+                    }
+                    this.musicFiles.addAll(musicFiles);
                 }
             } else if (folderTrigger) {
+                Log.d("Test", "5");
                 this.path.add("");
-                for (int i = 1; i < path.get(0).length; i++) {
-                    this.path.add((new File(path.get(0)[i])).getParentFile().getPath());
+                this.musicFiles.add(0, "..goToRoot");
+                for (int i = 1; i < paths.get(0).size(); i++) {
+                    this.path.add((new File(paths.get(0).get(i))).getParentFile().getPath());
                 }
+                this.musicFiles.addAll(musicFiles);
+            }else{
+                Log.d("Test", "6");
+                this.musicFiles = musicFiles;
             }
+//            Log.d("Test", musicFiles.size()+" "+this.musicFiles.size());
+//
+//            Log.d("Test", paths.get(folderNumber).size() + " = " + this.path.size());
+
         }catch (NullPointerException n){
+
             Log.d("Test", n.getMessage());
         }
     }
@@ -128,11 +154,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.names.setText(musicFiles.get(position));
             if (!playlist) {
                 holder.path.setText(path.get(position));
-                if(PlayService.isPlayingNow()&&path.get(position).equals(PlayService.playingFile)){
-                    holder.mView.setBackground(context.getResources().getDrawable(R.drawable.playing_background));
-                }
             } else if (folderTrigger) {
                 holder.path.setText(path.get(position));
+            }
+            if(PlayService.isPlayingNow()&&path.get(position).equals(PlayService.playingFile)){
+                holder.mView.setBackground(context.getResources().getDrawable(R.drawable.playing_background));
+                holder.names.setTextColor(context.getResources().getColor(R.color.colorWhite));
+                holder.path.setTextColor(context.getResources().getColor(R.color.colorWhite));
             }
             holder.checkBox.setOnCheckedChangeListener(null);
             holder.checkBox.setChecked(checked.contains(String.valueOf(position)));

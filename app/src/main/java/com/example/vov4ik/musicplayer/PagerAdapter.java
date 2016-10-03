@@ -1,6 +1,7 @@
 package com.example.vov4ik.musicplayer;
 
 import android.content.Context;
+import android.database.CursorIndexOutOfBoundsException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -22,7 +23,16 @@ public class PagerAdapter extends FragmentPagerAdapter {
     public PagerAdapter(FragmentManager fm, int NumOfTabs, Context context) {
         super(fm);
         this.mNumOfTabs = NumOfTabs;
-        this.list = DbConnector.getAllTabs(context);
+        try{
+            this.list = DbConnector.getAllTabs(context);
+        }catch(CursorIndexOutOfBoundsException c){
+            List<TabConstructor> t = new ArrayList<>();
+            for(String s: TabConstructor.getListOfTabs()) {
+                t.add(new TabConstructor(s, true));
+            }
+            DbConnector.tabsFiller(context, t);
+            this.list = t;
+        }
         fragments.put("Album",new AlbumsFragment());
         fragments.put("All Songs", new AllSongsFragment());
         fragments.put("Artist", new ArtistsFragment());

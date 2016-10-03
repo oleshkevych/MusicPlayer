@@ -3,10 +3,12 @@ package com.example.vov4ik.musicplayer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,13 +44,27 @@ public class AllSongsFragment extends MusicListFragment {
         getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.all_songs_recycler_view));
         getMusicItemsList().setCheckingTrigger(false);
         getMusicItemsList().setFolderTrigger(true);
-        List<String> list = DbConnector.getAllSongsPaths(getContext());
-        getMusicItemsList().setPath(Arrays.asList(new String[][]{list.toArray(new String[list.size()])}));
-        list = DbConnector.getAllSongsNames(getContext());
-        getMusicItemsList().setMusicFiles(Arrays.asList(new String[][]{list.toArray(new String[list.size()])}));
-        show(list);
+        List<List<String>> p = new ArrayList<>();
+        List<List<String>> m = new ArrayList<>();
+        m.add(new ArrayList<String>());
+        p.add(new ArrayList<String>());
+//        List<MusicFile> musicFiles = MainActivity.getmF();
+//        for(MusicFile musicFile: musicFiles){
+            m.get(0).addAll(DbConnector.getAllSongsNames(getContext()));
+            p.get(0).addAll(DbConnector.getAllSongsPaths(getContext()));
+//        }
+//        Collections.sort(m.get(0));
+//        for(MusicFile musicFile: musicFiles){
+//            p.get(0).set(m.get(0).indexOf(musicFile.getTitle()), musicFile.getPath());
+//        }
+
+
+        getMusicItemsList().setPath(p);
+        getMusicItemsList().setMusicFiles(m);
         getMusicItemsList().setNumberOfFolder(0);
         getMusicItemsList().setAllSongsFragment(true);
+        show(m.get(0));
+        Log.d("tset", m.get(0).size()+"");
         return getMusicItemsList().getRootView();
     }
     @Override
@@ -60,27 +76,27 @@ public class AllSongsFragment extends MusicListFragment {
 //                intent.putExtra(EXTRA_FOR_FILES,  getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder()));
 //                startActivity(intent);
             PlayService.setTrekNumber(0);
-            PlayService.setPath(Arrays.asList(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]));
-            if(PlayService.getPlayer()!=null) {
-                PlayService.setLastPlayedTime(0);
-                PlayService.startPlaying();
-            } else {
+            PlayService.setPath(Arrays.asList(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position)));
+            PlayService.setLastPlayedTime(0);
+//            if(PlayService.getPlayer()!=null) {
+//                PlayService.startPlaying();
+//            } else {
                 Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                intent1.setAction(PlayService.PLAY_ACTION);
                 MainActivity.getContext().startService(intent1);
-                PlayService.setLastPlayedTime(0);
-                PlayService.startPlaying();
-            }
+//                PlayService.startPlaying();
+//            }
         }else {
             if (getMusicItemsList().getCheckedList().contains(String.valueOf(position))){
                 List<String> l =  getMusicItemsList().getCheckedList();
                 l.remove(String.valueOf(position));
                 getMusicItemsList().setCheckedList(l);
-                getMusicItemsList().removeSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]);
+                getMusicItemsList().removeSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
             } else {
                 List<String> l =  getMusicItemsList().getCheckedList();
                 l.add(String.valueOf(position));
                 getMusicItemsList().setCheckedList(l);
-                getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]);
+                getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
             }
         }
     }
@@ -94,10 +110,10 @@ public class AllSongsFragment extends MusicListFragment {
             List<String> l = getMusicItemsList().getCheckedList();
             l.add(String.valueOf(position));
             getMusicItemsList().setCheckedList(l);
-            getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]);
-            RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, Arrays.asList(getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
+            getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
+            RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, (getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext());
+                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
             getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             return true;
         }catch(IllegalStateException il){
