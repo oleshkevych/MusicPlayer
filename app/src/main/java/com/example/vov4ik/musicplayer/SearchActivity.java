@@ -266,18 +266,18 @@ public class SearchActivity extends AppCompatActivity {
             PlayService.setTrekNumber(0);
             PlayService.setPath(path);
             PlayService.setLastPlayedTime(0);
-        }
 //        if(PlayService.getPlayer()==null) {
 //            Intent intent1 = new Intent(this, PlayService.class);
 //            startService(intent1);
 //        }
 //        PlayService.startPlaying();
-        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-        intent1.setAction(PlayService.PLAY_ACTION);
-        getApplicationContext().startService(intent1);
-        Intent intent = new Intent(this, PlayerActivity.class);
-        startActivity(intent);
-        finish();
+            Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+            intent1.setAction(PlayService.PLAY_ACTION);
+            getApplicationContext().startService(intent1);
+            Intent intent = new Intent(this, PlayerActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     @Override

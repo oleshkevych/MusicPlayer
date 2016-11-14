@@ -99,10 +99,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            PlayService.pausePlaying();
 //        }
 
-        asyncStop = false;
-        if(!backgroundExecuteTrigger) {
-            async = new FetchTask().execute();
-        }
+//        asyncStop = false;
+//        if(!backgroundExecuteTrigger) {
+//            async = new FetchTask().execute();
+//        }
         if(getIntent()!=null) {
             Log.d("Test", "Main A INTENT!!!!!");
             String intentAction = getIntent().getAction();
@@ -513,19 +513,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onStop() {
-        asyncStop = true;
-        async.cancel(true);
-        if(!async.isCancelled()){
-            async.cancel(true);
-        }
+//        asyncStop = true;
+//        async.cancel(true);
+//        if(!async.isCancelled()){
+//            async.cancel(true);
+//        }
 
         super.onStop();
     }
 
     @Override
     protected void onResume(){
-        asyncStop = false;
         if(!backgroundExecuteTrigger) {
+            asyncStop = false;
             async = new FetchTask().execute();
         }
         super.onResume();

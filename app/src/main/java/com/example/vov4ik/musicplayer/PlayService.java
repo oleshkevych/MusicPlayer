@@ -109,6 +109,10 @@ public class PlayService extends Service {
     }
 
     public static void setPath(List<String> path) {
+        if(player == null&&context!=null){
+            Intent i = new Intent(context, PlayService.class);
+            context.startService(i);
+        }
         if(path.size()>0) {
             List<String> p = new ArrayList<>();
             for (int i = 0; i < path.size(); i++) {
