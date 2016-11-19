@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class DbHelper extends SQLiteOpenHelper {
 
-    final static int DB_VERSION = 3;
+    final static int DB_VERSION = 5;
     final static String DB_NAME = "OwnHomeMadePlay.db";
 
     final static String TABLE_FOLDER = "folder";
@@ -66,10 +66,16 @@ public class DbHelper extends SQLiteOpenHelper {
     final static String TABLE_PLAY_SERVICE = "play_service";
     final static String COLUMN_NAME_ID_PLAY_SERVICE = "ID_play_service";
     final static String COLUMN_PATH_PLAY_SERVICE = "path_for_play_service";
-    final static String COLUMN_PLAYED_TIME = "last_played_time_for_play_service";
     final static String CREATE_TABLE_PLAY_SERVICE = "CREATE TABLE IF NOT EXISTS "+TABLE_PLAY_SERVICE+" (" +
-            COLUMN_NAME_ID_PLAY_SERVICE + " INTEGER PRIMARY KEY, "+  COLUMN_PATH_PLAY_SERVICE + " TEXT, " +
-            COLUMN_PLAYED_TIME + " INTEGER);";
+            COLUMN_NAME_ID_PLAY_SERVICE + " INTEGER PRIMARY KEY, "+  COLUMN_PATH_PLAY_SERVICE + " TEXT);";
+
+    final static String TABLE_PLAY_SERVICE_ATTRIBUTES = "play_service_attribute";
+    final static String COLUMN_PLAYED_TIME = "last_played_time_for_play_service";
+    final static String COLUMN_PLAYED_NUMBER = "last_played_number_for_play_service";
+    final static String COLUMN_PLAYED_SHUFFLE = "last_played_shuffle_state_for_play_service";
+    final static String CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES = "CREATE TABLE IF NOT EXISTS "+ TABLE_PLAY_SERVICE_ATTRIBUTES +" (" +
+            COLUMN_PLAYED_TIME + " INTEGER, " + COLUMN_PLAYED_NUMBER + " INTEGER, " +
+            COLUMN_PLAYED_SHUFFLE + " BOOLEAN);";
 
 
 
@@ -87,19 +93,23 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         db.execSQL(CREATE_TABLE_FILE);
         db.execSQL(CREATE_TABLE_FOLDER);
         db.execSQL(CREATE_TABLE_ALBUM);
         db.execSQL(CREATE_TABLE_ARTIST);
         db.execSQL(CREATE_TABLE_MAIN_FOLDER);
         db.execSQL(CREATE_TABLE_PLAY_SERVICE);
+        db.execSQL(CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES);
         db.execSQL(CREATE_TABLE_All_SONGS);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
+//        delete();
+//        mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
+//        mDatabase.delete(TABLE_PLAY_SERVICE_ATTRIBUTES, null, null);
+        onCreate(db);
     }
     private DbHelper open() {
         mDatabase = getWritableDatabase();
@@ -116,7 +126,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void delete() {
         Log.d("Test", "DELETE DB opened");
-        open();
+//        open();
         mDatabase.delete(TABLE_FILE, null, null);
         mDatabase.delete(TABLE_FOLDER, null, null);
         mDatabase.delete(TABLE_ALBUM, null, null);
@@ -667,27 +677,36 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public int getLastPlayedTime(){
         open();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
         cursor.moveToFirst();
-        int lastTime = cursor.getInt(2);
+        int lastTime = cursor.getInt(0);
         cursor.close();
         mDatabase.close();
         return lastTime;
     }
     public int getLastPlayedNumber(){
         open();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
         cursor.moveToFirst();
-        int lastTime = 0;
-        if(cursor.moveToNext()) {
-            lastTime = cursor.getInt(2);
+        int lastNumber = cursor.getInt(1);
+        cursor.close();
+        mDatabase.close();
+        return lastNumber;
+    }
+    public boolean getLastPlayedState(){
+        open();
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
+        cursor.moveToFirst();
+        boolean lastState = false;
+        if(cursor.getInt(2) == 1) {
+            lastState = true;
         }
         cursor.close();
         mDatabase.close();
-        return lastTime;
+        return lastState;
     }
 
-    public void setLastPlayListAndTime(List<String> list, int time, int number) {
+    public void setLastPlayList(List<String> list) {
         open();
         Log.d("Test", "DATABASE is writing current trek list");
         mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
@@ -696,18 +715,30 @@ public class DbHelper extends SQLiteOpenHelper {
         for (int i = 0; i < list.size(); i++) {
             ContentValues values = new ContentValues();
             values.put(COLUMN_PATH_PLAY_SERVICE, list.get(i));
-            if (i == 0) {
-                values.put(COLUMN_PLAYED_TIME, time);
-            } else if (i ==1){
-                values.put(COLUMN_PLAYED_TIME, number);
-            } else {
-                values.put(COLUMN_PLAYED_TIME, 0);
-            }
             mDatabase.insert(
                     DbHelper.TABLE_PLAY_SERVICE,
                     null,
                     values);
         }
+        mDatabase.close();
+    }
+    public void setPlaylistAttributes(int time, int number, boolean shuffle){
+        open();
+        mDatabase.delete(TABLE_PLAY_SERVICE_ATTRIBUTES, null, null);
+        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE_ATTRIBUTES);
+        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES);
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_PLAYED_TIME, time);
+        values.put(COLUMN_PLAYED_NUMBER, number);
+        if(shuffle) {
+            values.put(COLUMN_PLAYED_SHUFFLE, 1);
+        }else{
+            values.put(COLUMN_PLAYED_SHUFFLE, 0);
+        }
+        mDatabase.insert(
+                DbHelper.TABLE_PLAY_SERVICE_ATTRIBUTES,
+                null,
+                values);
         mDatabase.close();
     }
 }

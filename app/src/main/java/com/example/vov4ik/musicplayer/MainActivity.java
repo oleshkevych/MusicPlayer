@@ -79,6 +79,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        new DbConnector().fillerForDb(getContext());
 
+        if(PlayService.getPlayer() == null) {
+            setExecuteTrigger(true);
+            RefreshDb rDb = new RefreshDb();
+            rDb.execute();
+        }
 
 
         if(PlayService.getPlayer()==null) {
@@ -120,18 +125,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d("Test", "Main A "+getIntent().getStringExtra("command"));
         }
         if(getIntent()!=null&&getIntent().getData()!=null) {
-            Intent intent = new Intent(this, PlayerActivity.class);
-            startActivity(intent);
             Intent intent1 = new Intent(this, PlayService.class);
             List<String> l = new ArrayList<>();
             l.add(getIntent().getData().getPath());
-            PlayService.setPath(l);
-            PlayService.setTrekNumber(0);
-            PlayService.setLastPlayedTime(0);
-            PlayService.setClickedOnTheSong(true);
+            boolean nullPlayer = false;
+            if(PlayService.getPlayer() != null) {
+                PlayService.setPath(l);
+                PlayService.setTrekNumber(0);
+            }else{
+                nullPlayer = true;
+            }
             intent1.putExtra("CLICKED_SONG", getIntent().getData().getPath());
             intent1.setAction(PlayService.PLAY_ACTION);
             startService(intent1);
+            if(nullPlayer){
+                PlayService.setPath(l);
+            }
+            Intent intent = new Intent(this, PlayerActivity.class);
+            startActivity(intent);
             finish();
         }
 
@@ -402,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 song.setText(artist + " - " + title);
                 dur = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
                 cur = DbConnector.getLastPlayTime(getContext());
-            }catch(CursorIndexOutOfBoundsException c){
+            }catch(Exception c){//CursorIndexOutOfBoundsException c){
                 Log.d("Error", c.getMessage());
             }
         }
@@ -541,7 +552,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Button playButton = (Button) findViewById(R.id.playButton);
             assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.play_button_png));
-
+        }
+        final Button shuffle = (Button) findViewById(R.id.shuffle);
+        assert shuffle != null;
+        if(PlayService.isShuffle()){
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
+        }else{
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
         }
     }
 

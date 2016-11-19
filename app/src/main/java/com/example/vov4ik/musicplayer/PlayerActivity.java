@@ -788,15 +788,19 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void buttonChanger(){
+        Button playButton = (Button) findViewById(R.id.playButton);
+        assert playButton != null;
         if(PlayService.isPlayingNow()){
-            Button playButton = (Button) findViewById(R.id.playButton);
-            assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.pause_png));
         }else{
-            Button playButton = (Button) findViewById(R.id.playButton);
-            assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.play_button_png));
-
+        }
+        final Button shuffle = (Button) findViewById(R.id.shuffle_player_activity);
+        assert shuffle != null;
+        if(PlayService.isShuffle()){
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
+        }else{
+            shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
         }
     }
 
@@ -882,18 +886,15 @@ public class PlayerActivity extends AppCompatActivity implements View.OnClickLis
 //                    v.setBackground(getResources().getDrawable(R.drawable.checked_view_background));
                 }
             } else {
-                PlayService.setLastPlayedTime(0);
-                PlayService.setTrekNumber(position);
-//                if(PlayService.getPlayer()!=null) {
-//                    PlayService.startPlaying();
-//                } else {
-//                    Intent intent1 = new Intent(this, PlayService.class);
-//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.play");
-//                    intent1.putExtra("NUMBER", position);
-//                    startService(intent1);
-//                }
                 Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                 intent1.setAction(PlayService.PLAY_ACTION);
+                if (PlayService.getPlayer() != null) {
+                    PlayService.setLastPlayedTime(0);
+                    PlayService.setTrekNumber(position);
+                }else{
+                    intent1.putExtra("NUMBER", position);
+                    startService(intent1);
+                }
                 getApplicationContext().startService(intent1);
 //                showViews();
             }

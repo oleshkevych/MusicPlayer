@@ -143,31 +143,34 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
                 getMusicItemsList().setFolderTrigger(false);
                 showPlaylist(playlistNames);
             } else {
-//                Intent intent = new Intent(MainActivity.getContext(), PlayerActivity.class);
-//                intent.putExtra(EXTRA_FOR_FILES, filesName.get(numberOfPlaylist).toArray(new String[filesName.get(numberOfPlaylist).size()]));
-//                intent.putExtra(EXTRA_FOR_CLICKED_FILE, path.get(numberOfPlaylist).get(position));
-//                intent.putExtra(EXTRA_FOR_PATHS, path.get(numberOfPlaylist).toArray(new String[path.get(numberOfPlaylist).size()]));
 
-                PlayService.setTrekNumber(position-1);
-                PlayService.setPath(path.get(numberOfPlaylist));
+
+
+                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                boolean nullPlayer = false;
+                if(PlayService.getPlayer() != null) {
+//                    Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+//                    MainActivity.getContext().startService(intent1);
+//                }
+//                    PlayService.setTrekNumber(position - 1);
+                    PlayService.setPath(path.get(numberOfPlaylist));
 //                if(PlayService.getPlayer()!=null) {
 //                    PlayService.setLastPlayedTime(0);
-//                    PlayService.startPlaying(path.get(numberOfPlaylist).get(position));
+//                    PlayService.startPlaying(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]);
 //                } else {
-                PlayService.setLastPlayedTime(0);
-                PlayService.setClickedOnTheSong(true);
-                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+//                    PlayService.setClickedOnTheSong(true);
+
+//                    PlayService.startPlaying(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[position]);
+//                }
+                }else{
+                    nullPlayer = true;
+                }
                 intent1.setAction(PlayService.PLAY_ACTION);
                 intent1.putExtra("CLICKED_SONG", path.get(numberOfPlaylist).get(position));
                 MainActivity.getContext().startService(intent1);
-//                    PlayService.startPlaying(path.get(numberOfPlaylist).get(position));
-//                }
-//                if(isAdded()) {
-//                    startActivity(intent);
-//                }else{
-//                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-//                    MainActivity.getContext().startActivity(intent);
-//                }
+                if (nullPlayer) {
+                    PlayService.setPath(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()));
+                }
             }
         } else if (!((playlistTrigger) && (position == 0))) {
             if (getMusicItemsList().getCheckedList().contains(String.valueOf(position))){

@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
@@ -33,7 +32,7 @@ import java.util.Random;
 public class PlayService extends Service {
     private static List<String> path = new ArrayList<>();
     private static int lastPlayedTime;
-    private static MediaPlayer player =  null;
+    private static MediaPlayer player = null;
     public static String playingFile;
     private static Context context = null;
     private static NotificationManager nm = null;
@@ -51,11 +50,11 @@ public class PlayService extends Service {
     public static final String PREV_ACTION = "com.example.vov4ik.musicplayer.PlayService.prev";
     public static final String PAUSE_ACTION = "com.example.vov4ik.musicplayer.PlayService.pause";
     private static int trekNumber;
-    private static  int[]result;
+    private static int[] result;
     private static boolean clickedOnTheSong = false;
     private static Thread thread;
 
-    public static void setClickedOnTheSong(boolean clickedOnTheSong) {
+    private static void setClickedOnTheSong(boolean clickedOnTheSong) {
         PlayService.clickedOnTheSong = clickedOnTheSong;
     }
 
@@ -80,13 +79,13 @@ public class PlayService extends Service {
     }
 
     public static void setShuffle(boolean shuffle) {
-        if(shuffle){
-            for(int i = 0; i<result.length; i++){
-                if(result[i] == trekNumber){
+        if (shuffle && result.length > 1) {
+            for (int i = 0; i < result.length; i++) {
+                if (result[i] == trekNumber) {
                     trekNumber = i;
                 }
             }
-        }else{
+        } else {
             trekNumber = path.indexOf(playingFile);
         }
         PlayService.shuffle = shuffle;
@@ -109,11 +108,11 @@ public class PlayService extends Service {
     }
 
     public static void setPath(List<String> path) {
-        if(player == null&&context!=null){
+        if (player == null && context != null) {
             Intent i = new Intent(context, PlayService.class);
             context.startService(i);
         }
-        if(path.size()>0) {
+        if (path.size() > 0) {
             List<String> p = new ArrayList<>();
             for (int i = 0; i < path.size(); i++) {
                 File f = new File(path.get(i));
@@ -123,24 +122,28 @@ public class PlayService extends Service {
             }
             PlayService.path = p;
             makeShufflePath();
-        }else{
-            PlayService.path = path;
-            player.stop();
-            stopService();
+            if (isPlayingNow() && path.contains(playingFile)) {
+                setTrekNumber(path.indexOf(playingFile));
+            }
+//        }else{
+//            PlayService.path = path;
+//            player.stop();
+//            stopService();
         }
     }
 
-    public static void addPaths(List<String> pathList){
+    public static void addPaths(List<String> pathList) {
         List<String> p = new ArrayList<>();
         for (int i = 0; i < pathList.size(); i++) {
             File f = new File(pathList.get(i));
-            if ((!pathList.get(i).equals("..GoToRoot"))&&(!f.isDirectory())) {
+            if ((!pathList.get(i).equals("..GoToRoot")) && (!f.isDirectory())) {
                 p.add(pathList.get(i));
             }
         }
         path.addAll(p);
         makeShufflePath();
     }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -150,8 +153,8 @@ public class PlayService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        PlayService.color  = getResources().getColor(R.color.colorIconNotification);
-        PlayService.checkAPI =  Build.VERSION.SDK_INT>20;
+        PlayService.color = getResources().getColor(R.color.colorIconNotification);
+        PlayService.checkAPI = Build.VERSION.SDK_INT > 20;
 
 
     }
@@ -162,12 +165,12 @@ public class PlayService extends Service {
         Log.d("Test", "DESTROY!");
         this.stopService(new Intent(this, AutoAudioStopper.class));
         PhoneCallReceiver.stopListener();
-        if(player != null) {
+        if (player != null) {
             lastPlayedTime = player.getCurrentPosition();
             player.stop();
             player.release();
         }
-        if(isShuffle()){
+        if (isShuffle()) {
             path = shufflePath;
         }
         player = null;
@@ -176,7 +179,7 @@ public class PlayService extends Service {
         stopForeground(true);
         nm.cancel(1);
         nm.cancelAll();
-        if((thread!=null)&&thread.isAlive()){
+        if ((thread != null) && thread.isAlive()) {
             thread.interrupt();
         }
         super.onDestroy();
@@ -184,42 +187,50 @@ public class PlayService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("Test", "Onstartcommand "+Thread.currentThread().getName());
+        Log.d("Test", "Onstartcommand " + Thread.currentThread().getName());
 //        Log.d("Test", " "+path.toString());
-        if(intent!=null) {
+        if (intent != null) {
             Log.d("Test", "Main A 1");
         }
-        if(intent!=null&&intent.getAction()!=null) {
-            Log.d("Test", "Onstartcommand A "+intent.getAction());
+        if (intent != null && intent.getAction() != null) {
+            Log.d("Test", "Onstartcommand A " + intent.getAction());
         }
-        if(intent!=null&&intent.getStringExtra("command")!=null) {
-            Log.d("Test", "Onstartcommand A "+intent.getAction());
+        if (intent != null && intent.getStringExtra("command") != null) {
+            Log.d("Test", "Onstartcommand A " + intent.getAction());
         }
 //        Log.d("test", "intent == "+ intent+" "+flags);
 //        Log.d("test", "intentACTION == "+ intent.getAction());
         PlayService.nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         PlayService.context = this;
-        if(intent!=null&&intent.getAction()!=null) {
+        if (intent != null && intent.getAction() != null) {
             if (intent.getAction().equals(PLAY_ACTION)) {
                 String clickedSong = "";
-                if(intent.getIntExtra("NUMBER", 10000)!=10000){
+                if (intent.getIntExtra("NUMBER", 10000) != 10000) {
                     setTrekNumber(intent.getIntExtra("NUMBER", 0));
+                    setLastPlayedTime(0);
+                    if (isShuffle()) {
+                        clickedSong = shufflePath.get(trekNumber);
+                    } else {
+                        clickedSong = path.get(trekNumber);
+                    }
                 }
-                if((intent.getStringExtra("CLICKED_SONG") != null)&&(!intent.getStringExtra("CLICKED_SONG").equals(""))){
+                if ((intent.getStringExtra("CLICKED_SONG") != null) && (!intent.getStringExtra("CLICKED_SONG").equals(""))) {
                     clickedSong = intent.getStringExtra("CLICKED_SONG");
                     setLastPlayedTime(0);
+                    setClickedOnTheSong(true);
                 }
-                if(clickedSong.equals("")&&getPath() == null){
+                if (clickedSong.equals("") && getPath() == null) {
+                    setShuffle(DbConnector.getLastPlayState(context));
                     setPath(DbConnector.getLastPlayList(getApplicationContext()));
                     setTrekNumber(DbConnector.getLastPlayNumber(getApplicationContext()));
                     setLastPlayedTime(DbConnector.getLastPlayTime(getApplicationContext()));
                 }
-                if(player == null){
+                if (player == null) {
                     AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
                     AutoAudioStopper.getInstance().setAudioManager(am);
                     AutoAudioStopper.getInstance().setContext(this);
                 }
-                    startPlaying(clickedSong);
+                startPlaying(clickedSong);
             } else if (intent.getAction().equals(PREV_ACTION)) {
                 previous();
             } else if (intent.getAction().equals(NEXT_ACTION)) {
@@ -227,16 +238,17 @@ public class PlayService extends Service {
             } else if (intent.getAction().equals(CLOSE_ACTION)) {
                 pausePlaying();
                 stopSelf();
-            }else if (intent.getAction().equals(PAUSE_ACTION)) {
+            } else if (intent.getAction().equals(PAUSE_ACTION)) {
                 pausePlaying();
             }
+
         }
         sendNotification(context);
         startForeground(1, notification);
         return START_STICKY;
     }
 
-    private  void playFile(final String filePath){
+    private void playFile(final String filePath) {
 //        Intent intent = new Intent();
 //        Uri u = Uri.withAppendedPath(MediaStore.Audio.Media.getContentUriForPath(filePath),"1");
 //        intent.setAction(Intent.ACTION_MEDIA_BUTTON);
@@ -248,7 +260,7 @@ public class PlayService extends Service {
 //        sendBroadcast(intent);
 
 
-        if((thread!=null)&&thread.isAlive()){
+        if ((thread != null) && thread.isAlive()) {
             thread.interrupt();
         }
         try {
@@ -258,6 +270,7 @@ public class PlayService extends Service {
                         public void run() {
                             if (filePath == null) {
                                 try {
+                                    setShuffle(DbConnector.getLastPlayState(context));
                                     setPath(DbConnector.getLastPlayList(context));
                                     setTrekNumber(DbConnector.getLastPlayNumber(context));
                                     PlayService.lastPlayedTime = DbConnector.getLastPlayTime(context);
@@ -280,30 +293,30 @@ public class PlayService extends Service {
 
                             playingFile = filePath;
                             try {
-                            if (filePath != null) {
-                                Uri u = Uri.fromFile(new File(filePath));
-                                player.setDataSource(context, u);
+                                if (filePath != null) {
+                                    Uri u = Uri.fromFile(new File(filePath));
+                                    player.setDataSource(context, u);
 
-                                player.setVolume(100, 100);
-                                player.prepare();
-                                player.seekTo(lastPlayedTime);
-                                player.start();
-                                pauseTrigger = false;
-                                if (!AutoAudioStopper.getInstance().focusOn) {
-                                    AutoAudioStopper.getInstance().startFocus();
-                                }
-                                player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                    @Override
-                                    public void onCompletion(MediaPlayer mp) {
-                                        nextSong = true;
-                                        nextSong();
-
+                                    player.setVolume(100, 100);
+                                    player.prepare();
+                                    player.seekTo(lastPlayedTime);
+                                    player.start();
+                                    pauseTrigger = false;
+                                    if (!AutoAudioStopper.getInstance().focusOn) {
+                                        AutoAudioStopper.getInstance().startFocus();
                                     }
-                                });
-                                if ((context != null) && (nm != null)) {
-                                    sendNotification(context);
+                                    player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                        @Override
+                                        public void onCompletion(MediaPlayer mp) {
+                                            nextSong = true;
+                                            nextSong();
+
+                                        }
+                                    });
+                                    if ((context != null) && (nm != null)) {
+                                        sendNotification(context);
+                                    }
                                 }
-                            }
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -312,8 +325,7 @@ public class PlayService extends Service {
                     }
             );
             thread.start();
-        }
-        catch (IllegalStateException e1) {
+        } catch (IllegalStateException e1) {
             e1.printStackTrace();
         }
     }
@@ -335,15 +347,15 @@ public class PlayService extends Service {
 //        timer();
 //    }
 
-    private void nextSong(){
+    private void nextSong() {
         lastPlayedTime = 0;
         List<String> path;
-        if(shuffle) {
+        if (shuffle) {
             path = shufflePath;
-        }else{
+        } else {
             path = getPath();
         }
-        if(path.size()>0) {
+        if (path.size() > 0) {
             if (nextSong) {
                 nextSong = false;
 //                if ((path.indexOf(playingFile) + 1) < path.size()) {
@@ -363,7 +375,7 @@ public class PlayService extends Service {
 //                }
                 if ((getTrekNumber() + 1) < path.size()) {
                     playFile(path.get(getTrekNumber() + 1));
-                    setTrekNumber(getTrekNumber()+1);
+                    setTrekNumber(getTrekNumber() + 1);
                 } else {
                     playFile(path.get(0));
                     setTrekNumber(0);
@@ -379,31 +391,32 @@ public class PlayService extends Service {
             } else {
                 if ((getTrekNumber() + 1) < path.size()) {
                     playingFile = path.get(getTrekNumber() + 1);
-                    setTrekNumber(getTrekNumber()+1);
+                    setTrekNumber(getTrekNumber() + 1);
                 }
             }
         }
     }
 
-    public static void log(){
+    public static void log() {
         Log.d("test", player.getCurrentPosition() + "");
     }
 
-    public static boolean isPlayingNow(){
+    public static boolean isPlayingNow() {
         try {
             return player != null && player.isPlaying();
-        }catch (IllegalStateException e){
+        } catch (IllegalStateException e) {
             return false;
         }
     }
 
     private void pausePlaying() {
         pauseTrigger = true;
-        if(player!= null) {
+        if (player != null) {
             lastPlayedTime = player.getCurrentPosition();
             player.pause();
 //            Log.d("test", "pause "+lastPlayedTime+" "+getTrekNumber()+" "+path.size());
-            DbConnector.setLastPlayListAndTime(context, path, lastPlayedTime, getTrekNumber());
+            DbConnector.setLastPlayList(context, path);
+            DbConnector.setPlaylistAttributes(context, lastPlayedTime, getTrekNumber(), isShuffle());
             timer();
         }
         AutoAudioStopper.getInstance().stopFocus();
@@ -411,24 +424,27 @@ public class PlayService extends Service {
 
     private void startPlaying(String startPath) {
         List<String> path;
-        if(shuffle) {
+        if (shuffle) {
             path = shufflePath;
         } else {
             path = getPath();
         }
         try {
-        if(clickedOnTheSong) {
-            clickedOnTheSong = false;
-            setTrekNumber(path.indexOf(startPath));
-        }
-            playFile(path.get(getTrekNumber()));
-        }catch(IndexOutOfBoundsException i){
+            if (clickedOnTheSong) {
+                clickedOnTheSong = false;
+//            setTrekNumber(path.indexOf(startPath));
+                playFile(startPath);
+            } else {
+                playFile(path.get(getTrekNumber()));
+            }
+        } catch (IndexOutOfBoundsException i) {
             try {
+                setShuffle(DbConnector.getLastPlayState(context));
                 setPath(DbConnector.getLastPlayList(context));
                 setTrekNumber(DbConnector.getLastPlayNumber(context));
                 setLastPlayedTime(DbConnector.getLastPlayTime(context));
                 playFile(getPath().get(getTrekNumber()));
-            }catch(IndexOutOfBoundsException i1){
+            } catch (IndexOutOfBoundsException i1) {
                 setPath(DbConnector.getAllSongsPaths(context));
                 Random r = new Random();
                 setTrekNumber(r.nextInt(PlayService.path.size() - 1));
@@ -439,9 +455,9 @@ public class PlayService extends Service {
         }
     }
 
-    public static int duration(){
-        if(player == null||!isPlayingNow()){
-            if(playingFile!=null) {
+    public static int duration() {
+        if (player == null || !isPlayingNow()) {
+            if (playingFile != null) {
                 MediaPlayer p = new MediaPlayer();
                 try {
                     int d;
@@ -455,28 +471,31 @@ public class PlayService extends Service {
                     Log.d("test", e.toString());
                     return 0;
                 }
-            }else{ return 0;}
-        }else {
+            } else {
+                return 0;
+            }
+        } else {
             return player.getDuration();
         }
     }
 
-    public static int currentTime(){
-        if(player == null){
+    public static int currentTime() {
+        if (player == null) {
             return lastPlayedTime;
-        }else {
-            if(isPlayingNow()) {
+        } else {
+            if (isPlayingNow()) {
                 return player.getCurrentPosition();
-            }else{
+            } else {
                 return lastPlayedTime;
             }
         }
     }
 
-    public static String trekName(){
+    public static String trekName() {
         try {
             String playingFile = PlayService.playingFile;
             if (playingFile == null && context != null) {
+                setShuffle(DbConnector.getLastPlayState(context));
                 setPath(DbConnector.getLastPlayList(context));
                 setTrekNumber(DbConnector.getLastPlayNumber(context));
                 setLastPlayedTime(DbConnector.getLastPlayTime(context));
@@ -499,20 +518,20 @@ public class PlayService extends Service {
             } else {
                 return artist + " - " + title;
             }
-        }catch(CursorIndexOutOfBoundsException c){
+        } catch (Exception c) {
             Log.d("Error", c.getMessage());
             return " - ";
         }
     }
 
-    private  void previous(){
+    private void previous() {
         List<String> path;
-        if(shuffle) {
+        if (shuffle) {
             path = shufflePath;
-        }else{
+        } else {
             path = getPath();
         }
-        if(path.size()>0) {
+        if (path.size() > 0) {
             if (isPlayingNow()) {
 //                if (player.getCurrentPosition() < 10000) {
 //                    lastPlayedTime = 0;
@@ -556,7 +575,7 @@ public class PlayService extends Service {
                     lastPlayedTime = 0;
                     if ((getTrekNumber() - 1) >= 0) {
                         playingFile = path.get(getTrekNumber() - 1);
-                        setTrekNumber(getTrekNumber()-1);
+                        setTrekNumber(getTrekNumber() - 1);
                     } else {
                         playingFile = path.get(path.size() - 1);
                         setTrekNumber((path.size() - 1));
@@ -580,24 +599,24 @@ public class PlayService extends Service {
                 .setOngoing(true);
 
         Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, 0);
         builder.setContentIntent(pIntent);
 
         RemoteViews rw = new RemoteViews(context.getPackageName(), R.layout.notification);
 //            rw.setTextViewText(R.id.notification_artist, artist);
-            rw.setTextViewText(R.id.notification_trek, allTitle);
+        rw.setTextViewText(R.id.notification_trek, allTitle);
         Bitmap icon = getImage();
-        if(icon!=null){
+        if (icon != null) {
             rw.setImageViewBitmap(R.id.icon_notification, icon);
-        }else {
+        } else {
             rw.setImageViewResource(R.id.icon_notification, R.drawable.default_notification_icon);
         }
-        if(isPlayingNow()){
+        if (isPlayingNow()) {
             rw.setViewVisibility(R.id.playButtonNotif, Button.INVISIBLE);
             rw.setViewVisibility(R.id.pauseButtonNotif, Button.VISIBLE);
             builder.setSmallIcon(R.drawable.pause_png);
-        }else {
+        } else {
             rw.setViewVisibility(R.id.playButtonNotif, Button.VISIBLE);
             rw.setViewVisibility(R.id.pauseButtonNotif, Button.INVISIBLE);
             builder.setSmallIcon(R.drawable.play_button_png);
@@ -650,26 +669,26 @@ public class PlayService extends Service {
 //        }
     }
 
-    public static Bitmap getImage(){
+    public static Bitmap getImage() {
         Bitmap image;
+        try {
+            MediaMetadataRetriever mData = new MediaMetadataRetriever();
+            mData.setDataSource(playingFile);
             try {
-                MediaMetadataRetriever mData = new MediaMetadataRetriever();
-                mData.setDataSource(playingFile);
-                try {
-                    byte art[] = mData.getEmbeddedPicture();
-                    image = BitmapFactory.decodeByteArray(art, 0, art.length);
-                } catch (Exception e) {
-                    image = null;
-                }
-
-                mData.release();
-            } catch (IllegalArgumentException e) {
+                byte art[] = mData.getEmbeddedPicture();
+                image = BitmapFactory.decodeByteArray(art, 0, art.length);
+            } catch (Exception e) {
                 image = null;
             }
+
+            mData.release();
+        } catch (IllegalArgumentException e) {
+            image = null;
+        }
         return image;
     }
 
-    private static void makeShufflePath(){
+    private static void makeShufflePath() {
         PlayService.shufflePath = new ArrayList<>();
         int lengthOfArray = path.size();
 
@@ -678,21 +697,20 @@ public class PlayService extends Service {
             result[i] = i;
         }
         Random rnd = new Random();
-        for (int i = lengthOfArray - 1; i > 1; i--)
-        {
+        for (int i = lengthOfArray - 1; i > 1; i--) {
             int index = rnd.nextInt(i + 1);
             int a = result[index];
             result[index] = result[i];
             result[i] = a;
         }
 
-        for(int j = 0; j<result.length; j++) {
+        for (int j = 0; j < result.length; j++) {
             PlayService.shufflePath.add(j, path.get(result[j]));
         }
-        if (playingFile!=null&&!playingFile.equals("")) {
+        if (playingFile != null && !playingFile.equals("")) {
             int index = 0;
-            for (int j = 0; j<result.length; j++) {
-                if(PlayService.shufflePath.indexOf(playingFile) == result[j]) {
+            for (int j = 0; j < result.length; j++) {
+                if (PlayService.shufflePath.indexOf(playingFile) == result[j]) {
                     index = j;
                     break;
                 }
@@ -706,20 +724,20 @@ public class PlayService extends Service {
         }
     }
 
-    private static void timer(){
+    private static void timer() {
         if (!isPlayingNow()) {
             new Thread(
                     new Runnable() {
                         @Override
                         public void run() {
-                            int incr=0;
-                            while(isPlayingNow()||player==null) {
-                                Log.d("Test","timer "+Thread.currentThread().getName());
+                            int incr = 0;
+                            while (isPlayingNow() || player == null) {
+                                Log.d("Test", "timer " + Thread.currentThread().getName());
                                 if (incr > 300000) {
                                     stopService();
                                     incr = 0;
                                 }
-                                incr+=1000;
+                                incr += 1000;
                                 try {
                                     Thread.sleep(500);
                                 } catch (InterruptedException e) {

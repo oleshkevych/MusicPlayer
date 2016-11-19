@@ -146,26 +146,30 @@ public class DbConnector {
 private void folderMethod(File[] files){
     if (files!=null)
         for(int i=0; i < files.length; i++) {
+//            int folderCounter = 0;
             File file = files[i];
             if (!((file.isDirectory())&&(file.getName().equals("sys") || (file.getName().equals("system"))||(file.getName().equals("proc"))||file.getName().equals("mnt")||(file.getName().equals("d"))))){
                 if (!file.isHidden()) {
                     if (file.isDirectory()) {
                         folderCounter++;
                         if (folderCounter < 10) {
-                            folderMethod(file.listFiles());
-//                            Log.d("Test", "folderMethod " + file.getName());
 //                            Log.d("Test", "folderMethod " + file.getPath());
+//                            Log.d("Test", "folderMethod " + folderCounter);
+                            folderMethod(file.listFiles());
                         } else {
                             folderCounter = 0;
                         }
                     } else {
                         if (FileChecker.checker(file)) {
+//                            Log.d("Test", "folderMethod +");
                             MusicFile musicFile = new MusicFile();
+                            folderCounter = 0;
                             if(pathsExisted.contains(file.getPath())){
                                 musicFile = listMusicFilesExisted.get(pathsExisted.indexOf(file.getPath()));
                             }else {
                                 musicFile.setFolder((new File(file.getParent()).getName()));
-                                folderCounter = 0;
+                                Log.d("Test", "folderMethod +");
+
                                 MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                                 mmr.setDataSource(file.getPath());
                                 String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
@@ -457,9 +461,14 @@ private void folderMethod(File[] files){
     public static int getLastPlayNumber(Context context){
         return new DbHelper(context).getLastPlayedNumber();
     }
-    public static void setLastPlayListAndTime(Context context, List<String> list, int time, int number){
-        new DbHelper(context).setLastPlayListAndTime(list, time, number);
-//        Log.d("test", "Load");
+    public static boolean getLastPlayState(Context context){
+        return new DbHelper(context).getLastPlayedState();
+    }
+    public static void setLastPlayList(Context context, List<String> list){
+        new DbHelper(context).setLastPlayList(list);
+    }
+    public static void setPlaylistAttributes(Context context, int time, int number, boolean shuffle){
+        new DbHelper(context).setPlaylistAttributes(time, number, shuffle);
     }
     public static void setPlaylist(Context context,String playlist, List<String> paths){
         new DbPlaylist(context).playlistFiller(playlist, paths);
