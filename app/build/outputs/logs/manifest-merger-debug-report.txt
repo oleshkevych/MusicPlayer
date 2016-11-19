@@ -1,0 +1,182 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:2:1-65:12
+	package
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:2:11-51
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:3:11-69
+	android:versionCode
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:5:5-75
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:5:17-72
+permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:6:5-75
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:6:17-73
+permission#android.permission.MEDIA_CONTENT_CONTROL
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:7:5-75
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:7:17-72
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:8:5-80
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:8:22-77
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:9:5-80
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:9:22-78
+uses-permission#android.permission.READ_PHONE_STATE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:10:5-74
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:10:22-72
+application
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:12:5-63:19
+MERGED from [com.android.support:appcompat-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/AndroidManifest.xml:25:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:animated-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:design:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/design/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:appcompat-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/AndroidManifest.xml:25:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:animated-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:7:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:22:5-20
+	android:label
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:15:9-41
+	android:supportsRtl
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:16:9-35
+	android:allowBackup
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:13:9-35
+	android:icon
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:14:9-43
+	android:theme
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:17:9-40
+activity#com.example.vov4ik.musicplayer.MainActivity
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:18:9-30:20
+	android:label
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:21:13-45
+	android:excludeFromRecents
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:23:13-46
+	android:launchMode
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:24:13-42
+	android:configChanges
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:20:13-74
+	android:theme
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:22:13-56
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:19:13-41
+intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:25:13-29:29
+action#android.intent.action.MAIN
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:26:17-68
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:26:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:28:17-76
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:28:27-74
+activity#com.example.vov4ik.musicplayer.PlayerActivity
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:31:9-36:20
+	android:label
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:34:13-58
+	android:configChanges
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:33:13-74
+	android:theme
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:35:13-51
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:32:13-43
+service#com.example.vov4ik.musicplayer.PlayService
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:38:9-47
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:38:18-45
+service#com.example.vov4ik.musicplayer.AutoAudioStopper
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:39:9-52
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:39:18-50
+receiver#com.example.vov4ik.musicplayer.AlarmReceiver
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:41:9-45:20
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:41:19-48
+intent-filter#android.intent.action.BOOT_COMPLETED
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:42:13-44:29
+action#android.intent.action.BOOT_COMPLETED
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:43:17-78
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:43:25-76
+receiver#com.example.vov4ik.musicplayer.DisconnectingHeadphonesReceiver
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:46:9-50:20
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:46:19-66
+intent-filter#android.media.AUDIO_BECOMING_NOISY
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:47:9-49:25
+action#android.media.AUDIO_BECOMING_NOISY
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:48:13-73
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:48:21-70
+receiver#com.example.vov4ik.musicplayer.HeadphonesClickReceiver
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:51:9-55:20
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:51:19-58
+intent-filter#android.intent.action.MEDIA_BUTTON
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:52:13-54:29
+	android:priority
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:52:28-49
+action#android.intent.action.MEDIA_BUTTON
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:53:17-77
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:53:25-74
+receiver#com.example.vov4ik.musicplayer.PhoneCallReceiver
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:56:9-61:20
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:56:19-52
+intent-filter#android.intent.action.PHONE_STATE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:57:13-60:29
+action#android.intent.action.PHONE_STATE
+ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:58:17-59:26
+	android:name
+		ADDED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml:58:25-73
+uses-sdk
+INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+MERGED from [com.android.support:appcompat-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/AndroidManifest.xml:21:5-23:78
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:animated-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.2.1/AndroidManifest.xml:5:5-44
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:5:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:5:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:design:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/design/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:appcompat-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/AndroidManifest.xml:21:5-23:78
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:animated-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.2.1/AndroidManifest.xml:5:5-44
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:5:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:support-vector-drawable:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.2.1/AndroidManifest.xml:5:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:recyclerview-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/recyclerview-v7/23.2.1/AndroidManifest.xml:20:5-43
+MERGED from [com.android.support:support-v4:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.2.1/AndroidManifest.xml:20:5-43
+	tools:overrideLibrary
+		ADDED from [com.android.support:appcompat-v7:23.2.1] /Users/stark/projects/MusicPlayer/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.1/AndroidManifest.xml:23:9-75
+	android:targetSdkVersion
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
+		INJECTED from /Users/stark/projects/MusicPlayer/app/src/main/AndroidManifest.xml
