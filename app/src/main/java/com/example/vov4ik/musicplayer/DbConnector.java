@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,8 +27,8 @@ public class DbConnector {
 //    private List<List<String>> pathAlbums = new ArrayList<>();
 //    private List<List<String>> pathArtist = new ArrayList<>();
 //    private List<List<String>> pathForMainFolders = new ArrayList<>();
-    private int folderCounter = 0;
-
+//    private int folderCounter = 0;
+//    private File[] startPaths;
 //    private List<String> mainPath = new ArrayList<>();
 //    private String stringPath;
 
@@ -62,8 +63,8 @@ public class DbConnector {
         }
         Log.d("Test", "START");
         File f = new File(dirPath);
-        File[] files = f.listFiles();
-        folderMethod(files);
+        File[] startPaths = f.listFiles();
+        folderMethod(startPaths, 0);
         Log.d("Test", "ALL INCLUDE");
         folderAllIncludeMethod();
         Log.d("Test", "ALBUM");
@@ -143,33 +144,35 @@ public class DbConnector {
 //            musicFiles.add(musicFiles1.get(index));
 //        }
 //    }
-private void folderMethod(File[] files){
-    if (files!=null)
+private void folderMethod(File[] files, int counter){
+    if (files != null)
         for(int i=0; i < files.length; i++) {
 //            int folderCounter = 0;
             File file = files[i];
+
             if (!((file.isDirectory())&&(file.getName().equals("sys") || (file.getName().equals("system"))||(file.getName().equals("proc"))||file.getName().equals("mnt")||(file.getName().equals("d"))))){
                 if (!file.isHidden()) {
                     if (file.isDirectory()) {
-                        folderCounter++;
-                        if (folderCounter < 10) {
-//                            Log.d("Test", "folderMethod " + file.getPath());
-//                            Log.d("Test", "folderMethod " + folderCounter);
-                            folderMethod(file.listFiles());
+//                        folderCounter++;
+
+                        if (counter < 10) {
+                            Log.d("Test", "folderMethod " + file.getPath());
+                            Log.d("Test", "folderMethod " + counter);
+                            folderMethod(file.listFiles(), counter++);
                         } else {
-                            folderCounter = 0;
+//                            folderCounter = 0;
+                            counter = 0;
+
                         }
                     } else {
+//                        Log.d("Test", "folderMethod " + file.getPath());
                         if (FileChecker.checker(file)) {
-//                            Log.d("Test", "folderMethod +");
                             MusicFile musicFile = new MusicFile();
-                            folderCounter = 0;
+                            counter = 0;
                             if(pathsExisted.contains(file.getPath())){
                                 musicFile = listMusicFilesExisted.get(pathsExisted.indexOf(file.getPath()));
                             }else {
                                 musicFile.setFolder((new File(file.getParent()).getName()));
-                                Log.d("Test", "folderMethod +");
-
                                 MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                                 mmr.setDataSource(file.getPath());
                                 String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));

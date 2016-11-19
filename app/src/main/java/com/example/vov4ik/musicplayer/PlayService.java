@@ -14,6 +14,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -233,18 +234,21 @@ public class PlayService extends Service {
                 startPlaying(clickedSong);
             } else if (intent.getAction().equals(PREV_ACTION)) {
                 previous();
+                sendNotification(context);
             } else if (intent.getAction().equals(NEXT_ACTION)) {
                 nextSong();
+                sendNotification(context);
             } else if (intent.getAction().equals(CLOSE_ACTION)) {
                 pausePlaying();
                 stopSelf();
             } else if (intent.getAction().equals(PAUSE_ACTION)) {
                 pausePlaying();
+                sendNotification(context);
             }
 
         }
-        sendNotification(context);
-        startForeground(1, notification);
+//        sendNotification(context);
+//        startForeground(1, notification);
         return START_STICKY;
     }
 
@@ -260,14 +264,14 @@ public class PlayService extends Service {
 //        sendBroadcast(intent);
 
 
-        if ((thread != null) && thread.isAlive()) {
-            thread.interrupt();
-        }
-        try {
-            thread = new Thread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
+//        if ((thread != null) && thread.isAlive()) {
+//            thread.interrupt();
+//        }
+//        try {
+//            thread = new Thread(
+//                    new Runnable() {
+//                        @Override
+//                        public void run() {
                             if (filePath == null) {
                                 try {
                                     setShuffle(DbConnector.getLastPlayState(context));
@@ -300,7 +304,18 @@ public class PlayService extends Service {
                                     player.setVolume(100, 100);
                                     player.prepare();
                                     player.seekTo(lastPlayedTime);
-                                    player.start();
+                                    player.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
+
+                                        @Override
+                                        public void onSeekComplete(MediaPlayer mp) {
+                                            SystemClock.sleep(200);
+                                            player.start();
+                                            if ((context != null) && (nm != null)) {
+                                                sendNotification(context);
+                                            }
+                                        }
+                                    });
+
                                     pauseTrigger = false;
                                     if (!AutoAudioStopper.getInstance().focusOn) {
                                         AutoAudioStopper.getInstance().startFocus();
@@ -313,21 +328,19 @@ public class PlayService extends Service {
 
                                         }
                                     });
-                                    if ((context != null) && (nm != null)) {
-                                        sendNotification(context);
-                                    }
+
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
 
-                        }
-                    }
-            );
-            thread.start();
-        } catch (IllegalStateException e1) {
-            e1.printStackTrace();
-        }
+//                        }
+//                    }
+//            );
+//            thread.start();
+//        } catch (IllegalStateException e1) {
+//            e1.printStackTrace();
+//        }
     }
 
 
@@ -445,10 +458,14 @@ public class PlayService extends Service {
                 setLastPlayedTime(DbConnector.getLastPlayTime(context));
                 playFile(getPath().get(getTrekNumber()));
             } catch (IndexOutOfBoundsException i1) {
-                setPath(DbConnector.getAllSongsPaths(context));
-                Random r = new Random();
-                setTrekNumber(r.nextInt(PlayService.path.size() - 1));
-                playFile(getPath().get(getTrekNumber()));
+                try {
+                    setPath(DbConnector.getAllSongsPaths(context));
+                    Random r = new Random();
+                    setTrekNumber(r.nextInt(PlayService.path.size() - 1));
+                    playFile(getPath().get(getTrekNumber()));
+                }catch(Exception e){
+
+                }
             }
 
 

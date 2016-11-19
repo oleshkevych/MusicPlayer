@@ -5,6 +5,7 @@ import android.database.CursorIndexOutOfBoundsException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,12 +34,37 @@ public class PagerAdapter extends FragmentPagerAdapter {
             DbConnector.tabsFiller(context, t);
             this.list = t;
         }
-        fragments.put("Album",new AlbumsFragment());
-        fragments.put("All Songs", new AllSongsFragment());
-        fragments.put("Artist", new ArtistsFragment());
-        fragments.put("Folder(All Content)",new FolderAllIncludeFragment());
-        fragments.put("Folder", new FolderFragment());
-        fragments.put("Playlist", new PlaylistFragment());
+        try {
+            fragments.put("Album", new AlbumsFragment());
+        }catch(Exception e){
+            Log.d("Test", e.toString());
+            Log.d("Test", e.getMessage());
+        }
+        try {
+            fragments.put("All Songs", new AllSongsFragment());
+        }catch (Exception e){
+
+        }
+        try {
+            fragments.put("Artist", new ArtistsFragment());
+        }catch(Exception e){
+
+        }
+        try{
+            fragments.put("Folder(All Content)",new FolderAllIncludeFragment());
+        }catch(Exception e){
+
+        }
+        try{
+            fragments.put("Folder", new FolderFragment());
+        }catch(Exception e){
+
+        }
+        try {
+            fragments.put("Playlist", new PlaylistFragment());
+        }catch(Exception e){
+
+        }
         for(TabConstructor t: list){
             if(!t.isVisibility()){
                 fragments.remove(t.getName());

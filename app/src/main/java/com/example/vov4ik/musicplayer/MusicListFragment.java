@@ -231,12 +231,15 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
                             getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
                     getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
+                    getMusicItemsList().getRecyclerView().smoothScrollToPosition(position);
                 } else if (position != 0) {
                     getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
+
                     RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, (getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
                             getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
                     getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
+                    getMusicItemsList().getRecyclerView().smoothScrollToPosition(position);
                 }
             }
             Log.d("Test", getMusicItemsList().getCheckedList().toString());

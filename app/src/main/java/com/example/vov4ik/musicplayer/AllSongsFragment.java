@@ -48,15 +48,9 @@ public class AllSongsFragment extends MusicListFragment {
         List<List<String>> m = new ArrayList<>();
         m.add(new ArrayList<String>());
         p.add(new ArrayList<String>());
-//        List<MusicFile> musicFiles = MainActivity.getmF();
-//        for(MusicFile musicFile: musicFiles){
-            m.get(0).addAll(DbConnector.getAllSongsNames(getContext()));
-            p.get(0).addAll(DbConnector.getAllSongsPaths(getContext()));
-//        }
-//        Collections.sort(m.get(0));
-//        for(MusicFile musicFile: musicFiles){
-//            p.get(0).set(m.get(0).indexOf(musicFile.getTitle()), musicFile.getPath());
-//        }
+        m.get(0).addAll(DbConnector.getAllSongsNames(getContext()));
+        p.get(0).addAll(DbConnector.getAllSongsPaths(getContext()));
+
 
 
         getMusicItemsList().setPath(p);

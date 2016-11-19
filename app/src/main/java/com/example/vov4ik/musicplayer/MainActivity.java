@@ -3,12 +3,15 @@ package com.example.vov4ik.musicplayer;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.CursorIndexOutOfBoundsException;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -25,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static List<String> playlistList = new ArrayList<>();
     private static Context context;
     private boolean backgroundExecuteTrigger = false;
-
+    private static final int REQUEST_WRITE_STORAGE = 112;
 
     public static PagerAdapter getAdapter() {
         return adapter;
@@ -73,16 +77,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_main);
 
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_STORAGE);
+        }
+
+
+
 //        new DbConnector().fillerForDb(getContext());
 
-        if(PlayService.getPlayer() == null) {
-            setExecuteTrigger(true);
-            RefreshDb rDb = new RefreshDb();
-            rDb.execute();
+        ProgressBar pb = (ProgressBar)findViewById(R.id.progressbarRefreshDb);
+        pb.setVisibility(View.INVISIBLE);
+        if(getIntent().getExtras() == null || getIntent().getExtras().getBoolean("reloadDB", true)) {
+            if (PlayService.getPlayer() == null) {
+                pb.setVisibility(View.VISIBLE);
+                (new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                                new DbConnector().fillerForDb(getApplicationContext());
+                                setExecuteTrigger(false);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Intent i = new Intent(getContext(), MainActivity.class);
+                                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                        i.putExtra("reloadDB", false);
+                                        startActivity(i);
+                                    }
+                                });
+                            }
+                        })).start();
+
+            }
         }
 
 
@@ -391,6 +427,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode)
+        {
+            case REQUEST_WRITE_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Intent i = new Intent(getContext(), MainActivity.class);
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(i);
+                } else
+                {
+                    Toast.makeText(this, "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+
+    }
+
     private void progressWriter(){
         TextView currentTime = (TextView) findViewById(R.id.current_time);
         assert currentTime != null;
@@ -488,12 +544,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            Thread t = new Thread(){
-                        @Override
-                        public void run() {
+            //Thread t = new Thread(){
+                        //@Override
+                        //public void run() {
                             try {
                                 backgroundExecuteTrigger = true;
-                                while (!isInterrupted()&&!asyncStop) {
+                                while (!isCancelled()&&!asyncStop) {
                                     Log.d("Test", "MainActivity "+Thread.currentThread().getName());
                                     Thread.sleep(500);
                                     runOnUiThread(new Runnable() {
@@ -510,9 +566,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             } catch (InterruptedException e) {
                                 Log.d("Test", "sleep failure");
                             }
-                        }
-            };
-                t.start();
+                        //}
+            //};
+                //t.start();
             return null;
         }
 
@@ -571,13 +627,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected Void doInBackground(Void... params) {
             new DbConnector().fillerForDb(getApplicationContext());
+            setExecuteTrigger(false);
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            setExecuteTrigger(false);
+            Intent i = new Intent(getContext(), MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
         }
     }
 
@@ -663,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 linearLayout.setVisibility(LinearLayout.VISIBLE);
                 playlistList.add("+ Add New Playlist");
                 playlistList.addAll(DbConnector.getPlaylist(getApplicationContext()));
-               showView();
+                showView();
             }else{
                 Toast.makeText(getApplicationContext(), "Make shore, that you have selected some thing! ", Toast.LENGTH_SHORT).show();
             }

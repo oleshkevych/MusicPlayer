@@ -104,16 +104,18 @@ public class FolderAllIncludeFragment extends MusicListFragment {//implements Vi
         List<String> n = new ArrayList<>();
         List<List<String>> p1 = new ArrayList<>();
         List<List<String>> m1 = new ArrayList<>();
-        for(int i = 0; i < names.size(); i++){
-            n.add(names.get(i));
-        }
-        Collections.sort(names);
-        for(int i = 0; i < names.size(); i++){
-            int index = n.indexOf(names.get(i));
-            p1.add(p.get(index));
-            m1.add(m.get(index));
-        }
 
+            for (int i = 0; i < names.size(); i++) {
+                n.add(names.get(i));
+            }
+            Collections.sort(names);
+        if (!(names.size() == 1 && names.get(0).contains("Error"))) {
+            for (int i = 0; i < names.size(); i++) {
+                int index = n.indexOf(names.get(i));
+                p1.add(p.get(index));
+                m1.add(m.get(index));
+            }
+        }
         getMusicItemsList().setFolderName(names);
         getMusicItemsList().setPath(p1);
         getMusicItemsList().setMusicFiles(m1);

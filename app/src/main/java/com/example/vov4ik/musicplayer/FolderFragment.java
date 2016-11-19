@@ -107,10 +107,12 @@ public class FolderFragment extends MusicListFragment {//implements View.OnClick
         }
         Collections.sort(names);
         Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
-        for(int i = 0; i < names.size(); i++){
-            int index = n.indexOf(names.get(i));
-            p1.add(p.get(index));
-            m1.add(m.get(index));
+        if (!(names.size() == 1 && names.get(0).contains("Error"))) {
+            for (int i = 0; i < names.size(); i++) {
+                int index = n.indexOf(names.get(i));
+                p1.add(p.get(index));
+                m1.add(m.get(index));
+            }
         }
 
         getMusicItemsList().setFolderName(names);

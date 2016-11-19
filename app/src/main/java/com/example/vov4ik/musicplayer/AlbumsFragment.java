@@ -101,15 +101,21 @@ private static MusicItemsList musicItemsList;
         List<String> n = new ArrayList<>();
         List<List<String>> p1 = new ArrayList<>();
         List<List<String>> m1 = new ArrayList<>();
-        for(int i = 0; i < names.size(); i++){
-            n.add(names.get(i));
-        }
-        Collections.sort(names);
-        Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
-        for(int i = 0; i < names.size(); i++){
-            int index = n.indexOf(names.get(i));
-            p1.add(p.get(index));
-            m1.add(m.get(index));
+
+        if (!(names.size() == 1 && names.get(0).contains("Error"))) {
+            for (int i = 0; i < names.size(); i++) {
+                n.add(names.get(i));
+            }
+            Collections.sort(names);
+            Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
+            Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
+            Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
+                for (int i = 0; i < names.size(); i++) {
+                    int index = n.indexOf(names.get(i));
+                    p1.add(p.get(index));
+                    m1.add(m.get(index));
+                }
+
         }
 //        List<String> album1 = (DbConnector.getAlbumFromDb(getContext()));
 //        List<String> album = new ArrayList<>();

@@ -250,6 +250,7 @@ public class DbHelper extends SQLiteOpenHelper {
         List<String> folders = new ArrayList<>();
         List<String> mainFolders = new ArrayList<>();
         Collections.sort(musicFilesList, new SortByName());
+
         for(MusicFile musicFile: musicFilesList){
             if(albums.contains(musicFile.getAlbum())){
                 album_id = albums.indexOf(musicFile.getAlbum())+1;
@@ -305,8 +306,8 @@ public class DbHelper extends SQLiteOpenHelper {
                         valuesFolder);
                 folders.add(musicFile.getFolder());
             }
-
             ContentValues valuesFile = new ContentValues();
+//            valuesFile = new ContentValues();
             valuesFile.put(COLUMN_FILE_NAME, musicFile.getTitle());
             valuesFile.put(COLUMN_PATH, musicFile.getPath());
             valuesFile.put(COLUMN_ID_FOLDER, folder_id);
@@ -317,7 +318,9 @@ public class DbHelper extends SQLiteOpenHelper {
                     DbHelper.TABLE_FILE,
                     null,
                     valuesFile);
-        } mDatabase.close();
+        }
+        mDatabase.close();
+
     }
 
     public List<MusicFile> getMusicFilesForSearch(){
