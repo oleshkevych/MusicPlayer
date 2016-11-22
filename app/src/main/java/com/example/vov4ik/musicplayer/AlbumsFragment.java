@@ -1,5 +1,6 @@
 package com.example.vov4ik.musicplayer;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -90,56 +91,40 @@ private static MusicItemsList musicItemsList;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        getMusicItemsList().setRootView(inflater.inflate(R.layout.fragment_albums, container, false));
-        getMusicItemsList().setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.album_recycler_view));
-        getMusicItemsList().setCheckingTrigger(false);
 
-        List<String> names = DbConnector.getAlbumFromDb(getContext());
-        List<List<String>> m = DbConnector.getFileNamesForAlbums(getContext());
-        List<List<String>> p = DbConnector.getPathsForAlbums(getContext());
-        List<String> n = new ArrayList<>();
-        List<List<String>> p1 = new ArrayList<>();
-        List<List<String>> m1 = new ArrayList<>();
-        for(int i = 0; i < names.size(); i++){
-            n.add(names.get(i));
-        }
-        Collections.sort(names);
-        Log.d("tetst", names.size() + " " + m.size() + " " + p.size() + " ");
-        for(int i = 0; i < names.size(); i++){
-            int index = n.indexOf(names.get(i));
-            p1.add(p.get(index));
-            m1.add(m.get(index));
-        }
-//        List<String> album1 = (DbConnector.getAlbumFromDb(getContext()));
-//        List<String> album = new ArrayList<>();
-//        for(String a: album1){
-//            album.add(a);
-//        }
-//        Collections.sort(album);
-//        List<List<String>> p = new ArrayList<>();
-//        List<List<String>> m = new ArrayList<>();
-//        List<MusicFile> musicFiles = MainActivity.getmF();
-////        Collections.sort(album);
-//        for(int i = 0; i < album.size(); i++){
-//            List<String> p1 = new ArrayList<>();
-//            List<String> m1 = new ArrayList<>();
-//            p.add(p1);
-//            m.add(m1);
-//        }
-//        for(int i = 0; i < musicFiles.size(); i++){
-//            p.get(album.indexOf(musicFiles.get(i).getAlbum())).add(musicFiles.get(i).getPath());
-//            m.get(album.indexOf(musicFiles.get(i).getAlbum())).add(musicFiles.get(i).getTitle());
-//        }
-//
-//        Log.d("Test", "" + p.get(2));
-//        Log.d("Test", "" + m.get(2));
+        MusicItemsList musicItemsList = getMusicItemsList();
+        musicItemsList.setRootView(inflater.inflate(R.layout.fragment_albums, container, false));
+        musicItemsList.setRecyclerView((RecyclerView) getMusicItemsList().getRootView().findViewById(R.id.album_recycler_view));
+        musicItemsList.setCheckingTrigger(false);
 
-        getMusicItemsList().setFolderName(names);
-        getMusicItemsList().setPath(p1);
-        getMusicItemsList().setMusicFiles(m1);
-        show(getMusicItemsList().getFolderName());
-        return getMusicItemsList().getRootView();
+        Context context = getContext();
+        List<String> dbAlbumNamesList = DbConnector.getAlbumFromDb(context);
+        List<List<String>> dbFileNamesList = DbConnector.getFileNamesForAlbums(context);
+        List<List<String>> dbAlbumPathsList = DbConnector.getPathsForAlbums(context);
+        List<String> albumNamesList = new ArrayList<>();
+        List<List<String>> albumPathsList = new ArrayList<>();
+        List<List<String>> fileNamesList = new ArrayList<>();
+
+        for (String name : dbAlbumNamesList) {
+            albumNamesList.add(name);
+        }
+
+        Collections.sort(albumNamesList);
+
+        if (dbAlbumNamesList.size() == dbFileNamesList.size() &&
+            dbAlbumNamesList.size() == dbAlbumPathsList.size()) {
+            for (int i = 0; i < dbAlbumNamesList.size(); i++) {
+                int index = albumNamesList.indexOf(dbAlbumNamesList.get(i));
+                albumPathsList.add(dbAlbumPathsList.get(index));
+                fileNamesList.add(dbFileNamesList.get(index));
+            }
+        }
+
+        musicItemsList.setFolderName(albumNamesList);
+        musicItemsList.setPath(albumPathsList);
+        musicItemsList.setMusicFiles(fileNamesList);
+        show(musicItemsList.getFolderName());
+        return musicItemsList.getRootView();
     }
 /*
 
