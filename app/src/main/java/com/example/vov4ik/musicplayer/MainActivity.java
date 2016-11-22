@@ -3,12 +3,15 @@ package com.example.vov4ik.musicplayer;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.CursorIndexOutOfBoundsException;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -70,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.executeTrigger = executeTrigger;
     }
 
+    private static final int REQUEST_WRITE_STORAGE = 112;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +82,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_main);
 
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_STORAGE);
+            return;
+        }
+
+        initialize();
+    }
+
+    private void initialize() {
 //        new DbConnector().fillerForDb(getContext());
 
         if(PlayService.getPlayer() == null) {
@@ -195,7 +210,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-
         int[] ID = new int[]{R.id.layoutForButton1, R.id.layoutForButton2,R.id.layoutForButton3,R.id.layoutForButton4,R.id.layoutForButton5};
         final LinearLayout[] l= new LinearLayout[5];
         for(int i = 0; i<ID.length; i++){
@@ -221,9 +235,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                        PlayService.startPlaying();
 //
 //                    } else {
-                        Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-                        intent1.setAction(PlayService.PLAY_ACTION);
-                        getApplicationContext().startService(intent1);
+                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
+                    intent1.setAction(PlayService.PLAY_ACTION);
+                    getApplicationContext().startService(intent1);
 //                    }
                 }else{
 //                    PlayService.pausePlaying();
@@ -388,6 +402,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         asyncStop = false;
         if(!backgroundExecuteTrigger) {
             async = new FetchTask().execute();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode)
+        {
+            case REQUEST_WRITE_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    initialize();
+                } else
+                {
+                    Toast.makeText(this, "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+                }
+            }
         }
     }
 
