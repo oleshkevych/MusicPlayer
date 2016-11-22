@@ -36,33 +36,40 @@ public class DbConnector {
         listMusicFiles = new ArrayList<>();
         existingMusicFiles = new HashMap<>();
 
-        updateRootFolderPaths();
+        File deviceRoot = new File("/");
+        File[] rootFolderFiles = deviceRoot.listFiles();
+        if (rootFolderFiles == null) {
+            Log.e("MusicPlayer", "Error accessing device filesystem. Check if app has proper permissions.");
+            return;
+        }
+
+        rootFolderPaths = new HashSet<>();
+        for (File f : rootFolderFiles) {
+            rootFolderPaths.add(f.getPath());
+        }
 
         try {
+            Log.d("MusicPlayer", "Obtaining existing music files from database.");
             List<MusicFile> existingMusicFilesFromDb = getMusicFilesForSearch(context);
             if (existingMusicFilesFromDb != null) {
                 for (MusicFile m : existingMusicFilesFromDb) {
                     existingMusicFiles.put(m.getPath(), m);
                 }
+
+                Log.d("MusicPlayer", "Got " + listMusicFiles.size() + " music files.");
             }
         } catch (CursorIndexOutOfBoundsException ex) {
             Log.e("MusicPlayer", ex.getMessage(), ex);
         }
 
-        // TODO: Refactor the following part of the method
-        Log.d("Test", "START");
-        String dirPath = Environment.getRootDirectory().getParent();
-        File f = new File(dirPath);
-        File[] files = f.listFiles();
-        scanForMusicFiles(files, 0);
-        Log.d("Test", "ALL INCLUDE");
-        folderAllIncludeMethod();
-
-        Log.d("Test", "DELETE");
+        Log.d("MusicPlayer", "Start filesystem scanning.");
+        scanForMusicFiles(rootFolderFiles, 0);
+        Log.d("MusicPlayer", "Filesystem scanning complete. Found " + listMusicFiles.size() + " music files.");
+        Log.d("MusicPlayer", "Deleting old database.");
         DbConnector.deleteDb(context);
-        Log.d("Test", "FILL");
+        Log.d("MusicPlayer", "Creating new database with found files.");
         new DbHelper(context).musicFileFiller(listMusicFiles);
-        Log.d("Test", "FINISH" + listMusicFiles.size());
+        Log.d("MusicPlayer", "Database created successfully.");
     }
 
     private void scanForMusicFiles(File[] files, int folderScanDepth) {
@@ -101,32 +108,6 @@ public class DbConnector {
         }
     }
 
-    private void folderAllIncludeMethod() {
-        for (int i = 0; i < listMusicFiles.size(); i++) {
-            getParent(listMusicFiles.get(i).getPath(), i);
-        }
-    }
-
-    private void getParent(String s, int i) {
-        // TODO: Refactor this method.
-
-        File f = new File(s);
-
-        if (rootFolderPaths.contains(f.getParentFile().getParentFile().getPath())) {
-            return;
-        }
-
-        if (rootFolderPaths.contains(f.getParentFile().getParentFile().getParentFile().getPath())) {
-            if (f.isDirectory()) {
-                listMusicFiles.get(i).setMainFolder(f.getName());
-            } else {
-                listMusicFiles.get(i).setMainFolder("RootFiles");
-            }
-        } else {
-            getParent(f.getParentFile().getPath(), i);
-        }
-    }
-
     //region File processing helpers
 
     private static boolean isNonMusicDirectory(File file) {
@@ -153,20 +134,8 @@ public class DbConnector {
         mmr.release();
         musicFile.setTitle(title == null || title.isEmpty() ? file.getName() : title);
         musicFile.setPath(filePath);
+        musicFile.setMainFolder(musicFile.getFolder());
         return musicFile;
-    }
-
-    private void updateRootFolderPaths(){
-        File[] rootFolderFiles = Environment.getRootDirectory().listFiles();
-        if (rootFolderFiles == null) {
-            Log.e("MusicPlayer", "Error accessing device filesystem. Check if app has proper permissions.");
-            return;
-        }
-
-        rootFolderPaths = new HashSet<>();
-        for (File f : rootFolderFiles) {
-            rootFolderPaths.add(f.getPath());
-        }
     }
 
     //endregion
