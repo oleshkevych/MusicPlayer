@@ -208,7 +208,7 @@ public class DbPlaylist extends SQLiteOpenHelper {
         }
         for(int i: list) {
                 int in = mDatabase.delete(TABLE_FILES_IN_PLAYLIST, COLUMN_ID_COUNT + "=" + i, null);
-                    Log.d("Test", "delete "+in);
+                    Log.d("Test", "deleteDb "+in);
 
         }
 //        for(String s: fileName) {
@@ -216,7 +216,7 @@ public class DbPlaylist extends SQLiteOpenHelper {
 ////            try {
 //                do {
 //                    if (cursor.getInt(cursor.getColumnIndex(COLUMN_ID_FILES_IN_PLAYLIST)) == number && (cursor.getString(1).equals(s))) {
-//                        mDatabase.delete(TABLE_FILES_IN_PLAYLIST, COLUMN_ID_COUNT + "=" + cursor.getInt(2), null);
+//                        mDatabase.deleteDb(TABLE_FILES_IN_PLAYLIST, COLUMN_ID_COUNT + "=" + cursor.getInt(2), null);
 //                        Log.d("Test", s);
 //                        break;
 //                    }
