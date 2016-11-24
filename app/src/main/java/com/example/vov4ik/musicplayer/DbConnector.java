@@ -123,6 +123,7 @@ public class DbConnector {
         String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         musicFile.setArtist(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
         musicFile.setAlbum(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+        musicFile.setTrackNumber(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
         mmr.release();
         musicFile.setTitle(title == null || title.isEmpty() ? file.getName() : title);
         musicFile.setPath(filePath);

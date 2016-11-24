@@ -10,6 +10,7 @@ public class MusicFile {
     private String artist;
     private String folder;
     private String mainFolder;
+    private String trackNumber;
 
     public String getAlbum() {
         return album;
@@ -59,13 +60,12 @@ public class MusicFile {
         this.title = title;
     }
 
-    public MusicFile(String album, String artist, String folder, String mainFolder, String path, String title) {
-        this.album = album;
-        this.artist = artist;
-        this.folder = folder;
-        this.mainFolder = mainFolder;
-        this.path = path;
-        this.title = title;
+    public String getTrackNumber() {
+        return trackNumber;
+    }
+
+    public void setTrackNumber(String trackNumber) {
+        this.trackNumber = trackNumber;
     }
 
     public MusicFile() {
