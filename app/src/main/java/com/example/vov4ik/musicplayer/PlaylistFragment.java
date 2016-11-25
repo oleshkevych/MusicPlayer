@@ -102,7 +102,7 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
                 List<List<String>> arrayList = new ArrayList<>();
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, playlistNames,
                         arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             } else if (position != 0) {
                 getMusicItemsList().setNumberOfPlaylist(numberOfPlaylist + 10);
@@ -111,7 +111,7 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
                 arrayList.add(getMusicItemsList().getPathPlaylist().get(getMusicItemsList().getNumberOfFolder()));
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, filesName.get(numberOfPlaylist),
                         arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                        getMusicItemsList().isFolderTrigger(), numberOfPlaylist, true, getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             }
         }
@@ -146,7 +146,7 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
 
 
 
-                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                Intent intent1 = new Intent(getContext(), PlayService.class);
                 boolean nullPlayer = false;
                 if(PlayService.getPlayer() != null) {
 //                    Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
@@ -167,7 +167,7 @@ public class PlaylistFragment extends MusicListFragment {//implements View.OnLon
                 }
                 intent1.setAction(PlayService.PLAY_ACTION);
                 intent1.putExtra("CLICKED_SONG", path.get(numberOfPlaylist).get(position));
-                MainActivity.getContext().startService(intent1);
+                getContext().startService(intent1);
                 if (nullPlayer) {
                     PlayService.setPath(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()));
                 }

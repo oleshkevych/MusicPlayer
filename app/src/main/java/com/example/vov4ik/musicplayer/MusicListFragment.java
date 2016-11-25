@@ -77,12 +77,12 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
             if(getMusicItemsList().isFolderTrigger()) {
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, (getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
                         getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                        getMusicItemsList().isFolderTrigger(), getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             }else{
                 RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, getMusicItemsList().getFolderName(),
                         getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                        getMusicItemsList().isFolderTrigger(), getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                        getMusicItemsList().isFolderTrigger(), getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
                 getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             }
         }else{
@@ -102,7 +102,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
         getMusicItemsList().getRecyclerView().setLayoutManager(mLayoutManager);
         RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, list,
                 arrayList, getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfPlaylist(), true, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfPlaylist(), true, getContext(), getMusicItemsList().isAllSongsFragment());
         getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
     }
 
@@ -130,7 +130,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
             // specify an adapter (see also next example)
         RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, list,
                 getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
         getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
 
 //    public void longClick(int position){
@@ -156,7 +156,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
 //                intent.putExtra(EXTRA_FOR_CLICKED_FILE, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder())[(position)]);
 //                intent.putExtra(EXTRA_FOR_PATHS, getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()));
 //                startActivity(intent);
-                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                Intent intent1 = new Intent(getContext(), PlayService.class);
                 boolean nullPlayer = false;
                 if(PlayService.getPlayer() != null) {
 //                    Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
@@ -177,7 +177,7 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
                 }
                 intent1.setAction(PlayService.PLAY_ACTION);
                 intent1.putExtra("CLICKED_SONG", getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position - 1));
-                MainActivity.getContext().startService(intent1);
+                getContext().startService(intent1);
                 getMusicItemsList().setFolderTrigger(false);
                 show(getMusicItemsList().getFolderName());
                 if(nullPlayer){
@@ -229,13 +229,13 @@ public abstract class MusicListFragment extends Fragment implements ISelectableF
                     }
                     RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, getMusicItemsList().getFolderName(),
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
                     getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
                 } else if (position != 0) {
                     getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
                     RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, (getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
                     getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
                 }
             }
