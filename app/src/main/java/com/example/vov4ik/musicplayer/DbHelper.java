@@ -3,702 +3,384 @@ package com.example.vov4ik.musicplayer;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by vov4ik on 8/3/2016.
- */
+// TODO: Make this class thread safe.
 public class DbHelper extends SQLiteOpenHelper {
 
-    final static int DB_VERSION = 5;
-    final static String DB_NAME = "OwnHomeMadePlay.db";
+    //region Declarations
 
-    final static String TABLE_FOLDER = "folder";
-    final static String COLUMN_NAME_ID_FOLDER = "ID_folder";
-    final static String COLUMN_FOLDER_NAME = "name_of_folder";
-    final static String CREATE_TABLE_FOLDER = "CREATE TABLE IF NOT EXISTS "+TABLE_FOLDER+" (" +
-            COLUMN_NAME_ID_FOLDER + " INTEGER PRIMARY KEY, "+ COLUMN_FOLDER_NAME + " TEXT" + ");";
+    private final static int DB_VERSION = 5;
+    private final static String DB_NAME = "OwnHomeMadePlay.db";
+    private final static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS ";
+    private final static String DROP_TABLE = "DROP TABLE IF EXISTS ";
 
-    final static String TABLE_ALBUM = "album";
-    final static String COLUMN_NAME_ID_ALBUM = "ID_album";
-    final static String COLUMN_ALBUM_NAME = "name_of_album";
-    final static String CREATE_TABLE_ALBUM = "CREATE TABLE IF NOT EXISTS "+TABLE_ALBUM + " (" +
-            COLUMN_NAME_ID_ALBUM + " INTEGER PRIMARY KEY, "+ COLUMN_ALBUM_NAME + " TEXT" + ");";
+    // Database table names
+    private final static String FOLDERS = "Folders";
+    private final static String ALBUMS = "Albums";
+    private final static String ARTISTS = "Artists";
+    private final static String MAIN_FOLDERS = "MainFolders";
+    private final static String FILES = "Files";
+    private final static String PLAY_SERVICES = "PlayServices";
+    private final static String PLAY_SERVICE_ATTRIBUTES = "PlayServiceAttributes";
 
-    final static String TABLE_ARTIST = "artist";
-    final static String COLUMN_NAME_ID_ARTIST = "ID_artist";
-    final static String COLUMN_ARTIST_NAME = "name_of_artist";
-    final static String CREATE_TABLE_ARTIST = "CREATE TABLE IF NOT EXISTS "+TABLE_ARTIST+" (" +
-            COLUMN_NAME_ID_ARTIST + " INTEGER PRIMARY KEY, "+ COLUMN_ARTIST_NAME + " TEXT" + ");";
+    // Database column names
+    private final static String ID = "Id";
+    private final static String NAME = "Name";
+    private final static String PATH = "Path";
+    private final static String TRACK_NUMBER = "TrackNumber";
+    private final static String LAST_PLAYED_TIME = "LastPlayedTime";
+    private final static String LAST_PLAYED_NUMBER = "LastPlayedNumber";
+    private final static String LAST_PLAYED_SHUFFLE_STATE = "LastPlayedShuffleState";
 
-    final static String TABLE_MAIN_FOLDER = "main_folder";
-    final static String COLUMN_NAME_ID_MAIN_FOLDER = "ID_main_folder";
-    final static String COLUMN_MAIN_FOLDER_NAME = "name_of_main_folder";
-    final static String CREATE_TABLE_MAIN_FOLDER = "CREATE TABLE IF NOT EXISTS "+TABLE_MAIN_FOLDER+" (" +
-            COLUMN_NAME_ID_MAIN_FOLDER + " INTEGER PRIMARY KEY, "+ COLUMN_MAIN_FOLDER_NAME + " TEXT" + ");";
-
-    final static String TABLE_All_SONGS = "all_songs";
-    final static String COLUMN_NAME_ID_All_SONGS = "ID_all_songs";
-    final static String COLUMN_All_SONGS_PATH = "path_of_all_songs";
-    final static String COLUMN_All_SONGS_NAME = "name_of_all_songs";
-    final static String CREATE_TABLE_All_SONGS = "CREATE TABLE IF NOT EXISTS "+TABLE_All_SONGS+" (" +
-            COLUMN_NAME_ID_All_SONGS + " INTEGER PRIMARY KEY, "+ COLUMN_All_SONGS_PATH + " TEXT, "+COLUMN_All_SONGS_NAME + " TEXT" + ");";
-
-    final static String TABLE_FILE = "file";
-    final static String COLUMN_ID_FOLDER = "ID_file";
-    final static String COLUMN_ID_ALBUM = "ID_album";
-    final static String COLUMN_ID_ARTIST = "ID_artist";
-    final static String COLUMN_ID_MAIN_FOLDER = "ID_main_folder";
-    final static String COLUMN_FILE_NAME = "name_of_file";
-    final static String COLUMN_PATH = "path_to_file";
-    final static String CREATE_TABLE_FILE = "CREATE TABLE IF NOT EXISTS "+TABLE_FILE+" (" +
-            COLUMN_FILE_NAME + " TEXT, " + COLUMN_PATH +  " TEXT, "+ COLUMN_ID_FOLDER + " INTEGER, "+ COLUMN_ID_ALBUM + " INTEGER, " +
-            COLUMN_ID_ARTIST + " INTEGER, "+ COLUMN_ID_MAIN_FOLDER + " INTEGER"+ ");";
-
-    final static String TABLE_PLAY_SERVICE = "play_service";
-    final static String COLUMN_NAME_ID_PLAY_SERVICE = "ID_play_service";
-    final static String COLUMN_PATH_PLAY_SERVICE = "path_for_play_service";
-    final static String CREATE_TABLE_PLAY_SERVICE = "CREATE TABLE IF NOT EXISTS "+TABLE_PLAY_SERVICE+" (" +
-            COLUMN_NAME_ID_PLAY_SERVICE + " INTEGER PRIMARY KEY, "+  COLUMN_PATH_PLAY_SERVICE + " TEXT);";
-
-    final static String TABLE_PLAY_SERVICE_ATTRIBUTES = "play_service_attribute";
-    final static String COLUMN_PLAYED_TIME = "last_played_time_for_play_service";
-    final static String COLUMN_PLAYED_NUMBER = "last_played_number_for_play_service";
-    final static String COLUMN_PLAYED_SHUFFLE = "last_played_shuffle_state_for_play_service";
-    final static String CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES = "CREATE TABLE IF NOT EXISTS "+ TABLE_PLAY_SERVICE_ATTRIBUTES +" (" +
-            COLUMN_PLAYED_TIME + " INTEGER, " + COLUMN_PLAYED_NUMBER + " INTEGER, " +
-            COLUMN_PLAYED_SHUFFLE + " BOOLEAN);";
-
-
-
-
-
-    private Context mContext;
     private SQLiteDatabase mDatabase;
-    private String folderTop = "..GoToRoot";
+
+    //endregion
+
+    //region Common db operations
 
     public DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
-        mContext = context;
         mDatabase = getWritableDatabase();
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(CREATE_TABLE_FILE);
-        db.execSQL(CREATE_TABLE_FOLDER);
-        db.execSQL(CREATE_TABLE_ALBUM);
-        db.execSQL(CREATE_TABLE_ARTIST);
-        db.execSQL(CREATE_TABLE_MAIN_FOLDER);
-        db.execSQL(CREATE_TABLE_PLAY_SERVICE);
-        db.execSQL(CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES);
-        db.execSQL(CREATE_TABLE_All_SONGS);
+        createDbIfNotExist(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-//        delete();
-//        mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
-//        mDatabase.delete(TABLE_PLAY_SERVICE_ATTRIBUTES, null, null);
-        onCreate(db);
-    }
-    private DbHelper open() {
-        mDatabase = getWritableDatabase();
-        mDatabase.execSQL(CREATE_TABLE_FOLDER);
-        mDatabase.execSQL(CREATE_TABLE_FILE);
-        mDatabase.execSQL(CREATE_TABLE_ALBUM);
-        mDatabase.execSQL(CREATE_TABLE_ARTIST);
-        mDatabase.execSQL(CREATE_TABLE_MAIN_FOLDER);
-        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
-        mDatabase.execSQL(CREATE_TABLE_All_SONGS);
-        return this;
+        createDbIfNotExist(db);
     }
 
-
-    public void delete() {
-        Log.d("Test", "DELETE DB opened");
-//        open();
-        mDatabase.delete(TABLE_FILE, null, null);
-        mDatabase.delete(TABLE_FOLDER, null, null);
-        mDatabase.delete(TABLE_ALBUM, null, null);
-        mDatabase.delete(TABLE_ARTIST, null, null);
-        mDatabase.delete(TABLE_MAIN_FOLDER, null, null);
-        mDatabase.delete(TABLE_All_SONGS, null, null);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_All_SONGS);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FILE);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FOLDER);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_ALBUM);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_ARTIST);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_MAIN_FOLDER);
+    private static String getDependentIdColumnName(String tableName) {
+        return String.format("[%1$s.%2$s]", tableName, ID);
     }
 
-//    public void filler(List<String> folders, List<String[]> files, List<String[]> paths, List<String> albums, List<List<String>> pathAlbums,
-//                       List<String> artists, List<List<String>> pathArtists, List<String> mainFolders, List<List<String>> pathMainFolders) {
-//        open();
-//
-//        for (String album: albums){
-//            ContentValues values = new ContentValues();
-//            values.put(COLUMN_ALBUM_NAME, album);
-//            mDatabase.insert(
-//                    DbHelper.TABLE_ALBUM,
-//                    null,
-//                    values);
-//        }
-//        for (int i = 0; i< paths.size(); i++){
-//            for(int j = 1; j<paths.get(i).length; j++) {
-//                ContentValues values = new ContentValues();
-//                values.put(COLUMN_All_SONGS_PATH, paths.get(i)[j]);
-//                values.put(COLUMN_All_SONGS_NAME, files.get(i)[j]);
-//                mDatabase.insert(
-//                        DbHelper.TABLE_All_SONGS,
-//                        null,
-//                        values);
-//            }
-//        }
-//        for (String artist: artists){
-//            ContentValues values = new ContentValues();
-//            values.put(COLUMN_ARTIST_NAME, artist);
-//            mDatabase.insert(
-//                    DbHelper.TABLE_ARTIST,
-//                    null,
-//                    values);
-//        }
-//        for (String folder: mainFolders){
-//            ContentValues values = new ContentValues();
-//            values.put(COLUMN_MAIN_FOLDER_NAME, folder);
-//            mDatabase.insert(
-//                    DbHelper.TABLE_MAIN_FOLDER,
-//                    null,
-//                    values);
-//        }
-//        for (int i = 0; i < folders.size(); i++) {
-//            ContentValues valuesFolder = new ContentValues();
-//            valuesFolder.put(COLUMN_FOLDER_NAME, folders.get(i));
-//            mDatabase.insert(
-//                    DbHelper.TABLE_FOLDER,
-//                    null,
-//                    valuesFolder);
-//
-//            for (int j = 0; j<files.get(i).length; j++){
-//                String path = paths.get(i)[j];
-//                ContentValues valuesFile = new ContentValues();
-//                if (files.get(i)[j].equals("..goToRoot")){
-//                    valuesFile.put(COLUMN_FILE_NAME, files.get(i)[j]);
-//                    valuesFile.put(COLUMN_PATH, paths.get(i)[j]);
-//                    valuesFile.put(COLUMN_ID_FOLDER, i);
-//                    valuesFile.put(COLUMN_ID_ALBUM, 0);
-//                    valuesFile.put(COLUMN_ID_ARTIST, 0);
-//                    valuesFile.put(COLUMN_ID_MAIN_FOLDER, 0);
-//                }else {
-//                    valuesFile.put(COLUMN_FILE_NAME, files.get(i)[j]);
-//                    valuesFile.put(COLUMN_PATH, paths.get(i)[j]);
-//                    valuesFile.put(COLUMN_ID_FOLDER, i);
-//                    valuesFile.put(COLUMN_ID_ALBUM, finderID(path, "album", pathAlbums, albums));
-//                    valuesFile.put(COLUMN_ID_ARTIST, finderID(path, "artist", pathArtists, artists));
-//                    valuesFile.put(COLUMN_ID_MAIN_FOLDER, finderID(path, "mainFolder", pathMainFolders, mainFolders));
-//                }
-//                mDatabase.insert(
-//                        DbHelper.TABLE_FILE,
-//                        null,
-//                        valuesFile);
-//            }
-//        } mDatabase.close();
-//    }
-//    private int finderID(String path, String sectionName, List<List<String>> sectionPaths, List<String> section){
-//        int number = 0;
-//        for(int i = 0; i<sectionPaths.size(); i++){
-//            if(sectionPaths.get(i).contains(path)){
-//                number = i;
-//            }
-//        }
-//        String searchingName = section.get(number);
-//        int searchingID = 0; Cursor cursor;
-//        if (sectionName.equals("album")) {
-//            cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM, null);
-//        }else if (sectionName.equals("artist")){
-//            cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_ARTIST, null);
-//        }else if (sectionName.equals("mainFolder")){
-//            cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER, null);
-//        }else{
-//            cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER, null);
-//            Log.d("Test", "BLAAAAAAAAAAAAAAAAAAAAAA"+ sectionName);
-//        }
-//        cursor.moveToFirst();
-//        do{
-//            if(cursor.getString(1).equals(searchingName)){
-//                searchingID = cursor.getInt(0);
-//                break;
-//            }
-//        }while(cursor.moveToNext());
-//        cursor.close();
-//        return searchingID;
-//    }
+    private static String getLeftJoinQuery(String tableName) {
+        return " LEFT JOIN " + tableName + " ON " + FILES + "." + getDependentIdColumnName(tableName) + "=" + tableName + "." + ID;
+    }
+
+    private static String getNameColumnAlias(String tableName) {
+        return tableName + "." + NAME + " AS " + tableName + NAME;
+    }
+
+    private static void createDbIfNotExist(SQLiteDatabase db) {
+        // TODO: Add more constraints to db schema
+        db.execSQL(CREATE_TABLE + FILES + " (" +
+                NAME + " TEXT, " +
+                PATH + " TEXT, " +
+                TRACK_NUMBER + " STRING, " +
+                getDependentIdColumnName(FOLDERS) + " INTEGER, " +
+                getDependentIdColumnName(ALBUMS) + " INTEGER, " +
+                getDependentIdColumnName(ARTISTS) + " INTEGER, " +
+                getDependentIdColumnName(MAIN_FOLDERS) + " INTEGER" + ");");
+        db.execSQL(CREATE_TABLE + FOLDERS + " (" +
+                ID + " INTEGER PRIMARY KEY, " +
+                NAME + " TEXT" + ");");
+        db.execSQL(CREATE_TABLE + ALBUMS + " (" +
+                ID + " INTEGER PRIMARY KEY, " +
+                NAME + " TEXT" + ");");
+        db.execSQL(CREATE_TABLE + ARTISTS + " (" +
+                ID + " INTEGER PRIMARY KEY, " +
+                NAME + " TEXT" + ");");
+        db.execSQL(CREATE_TABLE + MAIN_FOLDERS + " (" +
+                ID + " INTEGER PRIMARY KEY, " +
+                NAME + " TEXT" + ");");
+        db.execSQL(CREATE_TABLE + PLAY_SERVICES + " (" +
+                ID + " INTEGER PRIMARY KEY, " +
+                PATH + " TEXT);");
+        db.execSQL(CREATE_TABLE + PLAY_SERVICE_ATTRIBUTES + " (" +
+                LAST_PLAYED_TIME + " INTEGER, " +
+                LAST_PLAYED_NUMBER + " INTEGER, " +
+                LAST_PLAYED_SHUFFLE_STATE + " BOOLEAN);");
+    }
+
+    public void deleteDb() {
+        mDatabase.execSQL(DROP_TABLE + FILES);
+        mDatabase.execSQL(DROP_TABLE + FOLDERS);
+        mDatabase.execSQL(DROP_TABLE + ALBUMS);
+        mDatabase.execSQL(DROP_TABLE + ARTISTS);
+        mDatabase.execSQL(DROP_TABLE + MAIN_FOLDERS);
+    }
+
+    private int addItemIfNotExist(HashMap<String, Integer> itemsMap, String itemName, String tableName) {
+        int item_id;
+        if (itemsMap.containsKey(itemName)) {
+            item_id = itemsMap.get(itemName);
+        } else {
+            item_id = itemsMap.size();
+            ContentValues values = new ContentValues();
+            values.put(NAME, itemName);
+            values.put(ID, item_id);
+            mDatabase.insert(tableName, null, values);
+            itemsMap.put(itemName, item_id);
+        }
+
+        return item_id;
+    }
+
     public void musicFileFiller(List<MusicFile> musicFilesList) {
-        open();
-        long album_id, artist_id, folder_id, main_folder_id;
-        List<String> albums = new ArrayList<>();
-        List<String> artists = new ArrayList<>();
-        List<String> folders = new ArrayList<>();
-        List<String> mainFolders = new ArrayList<>();
-        Collections.sort(musicFilesList, new SortByName());
-        for(MusicFile musicFile: musicFilesList){
-            if(albums.contains(musicFile.getAlbum())){
-                album_id = albums.indexOf(musicFile.getAlbum())+1;
-            }else {
-                ContentValues values = new ContentValues();
-                values.put(COLUMN_ALBUM_NAME, musicFile.getAlbum());
-                album_id = mDatabase.insert(
-                        DbHelper.TABLE_ALBUM,
-                        null,
-                        values);
-                albums.add(musicFile.getAlbum());
-            }
+        createDbIfNotExist(mDatabase);
 
-            ContentValues valuesAll = new ContentValues();
-            valuesAll.put(COLUMN_All_SONGS_PATH, musicFile.getPath());
-            valuesAll.put(COLUMN_All_SONGS_NAME, musicFile.getTitle());
-            mDatabase.insert(
-                    DbHelper.TABLE_All_SONGS,
-                    null,
-                    valuesAll);
+        long startTime = System.currentTimeMillis();
+        int album_id,
+                artist_id,
+                folder_id,
+                main_folder_id;
+        HashMap<String, Integer> albums = new HashMap<>();
+        HashMap<String, Integer> artists = new HashMap<>();
+        HashMap<String, Integer> folders = new HashMap<>();
+        HashMap<String, Integer> mainFolders = new HashMap<>();
 
-            if(artists.contains(musicFile.getArtist())){
-                artist_id = artists.indexOf(musicFile.getArtist())+1;
-            }else {
-                ContentValues values = new ContentValues();
-                values.put(COLUMN_ARTIST_NAME, musicFile.getArtist());
-                artist_id = mDatabase.insert(
-                        DbHelper.TABLE_ARTIST,
-                        null,
-                        values);
-                artists.add(musicFile.getArtist());
-            }
-            if(mainFolders.contains(musicFile.getMainFolder())){
-                main_folder_id = mainFolders.indexOf(musicFile.getMainFolder())+1;
-            }else {
-                ContentValues values = new ContentValues();
-                values.put(COLUMN_MAIN_FOLDER_NAME, musicFile.getMainFolder());
-                main_folder_id = mDatabase.insert(
-                        DbHelper.TABLE_MAIN_FOLDER,
-                        null,
-                        values);
-                mainFolders.add(musicFile.getMainFolder());
-            }
-
-            if(folders.contains(musicFile.getFolder())){
-                folder_id = folders.indexOf(musicFile.getFolder())+1;
-            }else {
-                ContentValues valuesFolder = new ContentValues();
-                valuesFolder.put(COLUMN_FOLDER_NAME, musicFile.getFolder());
-                folder_id = mDatabase.insert(
-                        DbHelper.TABLE_FOLDER,
-                        null,
-                        valuesFolder);
-                folders.add(musicFile.getFolder());
-            }
-
+        for (MusicFile musicFile : musicFilesList) {
+            album_id = addItemIfNotExist(albums, musicFile.getAlbum(), ALBUMS);
+            artist_id = addItemIfNotExist(artists, musicFile.getArtist(), ARTISTS);
+            main_folder_id = addItemIfNotExist(mainFolders, musicFile.getMainFolder(), MAIN_FOLDERS);
+            folder_id = addItemIfNotExist(folders, musicFile.getFolder(), FOLDERS);
             ContentValues valuesFile = new ContentValues();
-            valuesFile.put(COLUMN_FILE_NAME, musicFile.getTitle());
-            valuesFile.put(COLUMN_PATH, musicFile.getPath());
-            valuesFile.put(COLUMN_ID_FOLDER, folder_id);
-            valuesFile.put(COLUMN_ID_ALBUM, album_id);
-            valuesFile.put(COLUMN_ID_ARTIST, artist_id);
-            valuesFile.put(COLUMN_ID_MAIN_FOLDER, main_folder_id);
-            mDatabase.insert(
-                    DbHelper.TABLE_FILE,
-                    null,
-                    valuesFile);
-        } mDatabase.close();
+            valuesFile.put(NAME, musicFile.getTitle());
+            valuesFile.put(PATH, musicFile.getPath());
+            valuesFile.put(TRACK_NUMBER, musicFile.getTrackNumber());
+            valuesFile.put(getDependentIdColumnName(FOLDERS), folder_id);
+            valuesFile.put(getDependentIdColumnName(ALBUMS), album_id);
+            valuesFile.put(getDependentIdColumnName(ARTISTS), artist_id);
+            valuesFile.put(getDependentIdColumnName(MAIN_FOLDERS), main_folder_id);
+            mDatabase.insert(FILES, null, valuesFile);
+        }
+
+        mDatabase.close();
+        long endTime = System.currentTimeMillis();
+        Log.i(Constants.LOG_TAG, "Database filled with data in " + (endTime - startTime) + " ms.");
     }
 
-    public List<MusicFile> getMusicFilesForSearch(){
-        open();
-        List<MusicFile> list = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FILE, null);
-        cursor.moveToFirst();
-        Cursor c;
-        do{
-            if (!cursor.getString(0).equals("..goToRoot")) {
-                MusicFile m = new MusicFile();
-                m.setTitle(cursor.getString(0));
-                m.setPath(cursor.getString(1));
-              c = mDatabase.rawQuery("SELECT * FROM " + TABLE_FOLDER + " WHERE " + COLUMN_NAME_ID_FOLDER + " = " + String.valueOf(cursor.getInt(2)), null);
-                c.moveToFirst();
-                m.setFolder(c.getString(1));
-                c.close();
-                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM + " WHERE " + COLUMN_NAME_ID_ALBUM + " = " + String.valueOf(cursor.getInt(3)), null);
-                c.moveToFirst();
-                m.setAlbum(c.getString(1));
-                c.close();
-                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_ARTIST + " WHERE " + COLUMN_NAME_ID_ARTIST + " = " + String.valueOf(cursor.getInt(4)), null);
-                c.moveToFirst();
-                m.setArtist(c.getString(1));
-                c.close();
-                c = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER + " WHERE " + COLUMN_NAME_ID_MAIN_FOLDER + " = " + String.valueOf(cursor.getInt(5)), null);
-                c.moveToFirst();
-                m.setMainFolder(c.getString(1));
-                c.close();
-                list.add(m);
-            }
-        }while(cursor.moveToNext());
+    public List<MusicFile> getMusicFilesForSearch() {
+        createDbIfNotExist(mDatabase);
+        List<MusicFile> items = new ArrayList<>();
+
+        /* Query can look like this:
+        SELECT
+            Files.Name AS FilesName,
+            Path,
+            TrackNumber,
+            Folders.Name AS FoldersName,
+            Albums.Name AS AlbumsName,
+            Artists.Name AS ArtistsName,
+            MainFolders.Name AS MainFoldersName
+        FROM Files
+           LEFT JOIN Folders ON Files.[Folders.Id] = Folders.Id
+           LEFT JOIN Albums ON Files.[Albums.Id] = Albums.Id
+           LEFT JOIN Artists ON Files.[Artists.Id] = Artists.Id
+           LEFT JOIN MainFolders ON Files.[MainFolders.Id] = MainFolders.Id
+        */
+        String query = "SELECT " +
+                getNameColumnAlias(FILES) + ", " +
+                PATH + ", " +
+                TRACK_NUMBER + ", " +
+                getNameColumnAlias(FOLDERS) + ", " +
+                getNameColumnAlias(ALBUMS) + ", " +
+                getNameColumnAlias(ARTISTS) + ", " +
+                getNameColumnAlias(MAIN_FOLDERS) +
+                " FROM " + FILES +
+                getLeftJoinQuery(FOLDERS) +
+                getLeftJoinQuery(ALBUMS) +
+                getLeftJoinQuery(ARTISTS) +
+                getLeftJoinQuery(MAIN_FOLDERS);
+        Log.d(Constants.LOG_TAG, "Fetching items by query: \n" + query);
+        long startTime = System.currentTimeMillis();
+        Cursor cursor = mDatabase.rawQuery(query, null);
+
+        while (cursor.moveToNext()) {
+            MusicFile item = new MusicFile();
+            item.setTitle(cursor.getString(0));
+            item.setPath(cursor.getString(1));
+            item.setTrackNumber(cursor.getString(2));
+            item.setFolder(cursor.getString(3));
+            item.setAlbum(cursor.getString(4));
+            item.setArtist(cursor.getString(5));
+            item.setMainFolder(cursor.getString(6));
+            items.add(item);
+        }
 
         cursor.close();
-        return list;
-    }
-    public List<String> getAllSongsPaths(){
-        open();
-        List<String> songs = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_All_SONGS, null);
-        cursor.moveToFirst();
-        try {
-            do{
-                if(!(cursor.getString(2)).equals("..goToRoot")) {
-                    songs.add(cursor.getString(1));
-                }
-            }while(cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            songs.add("Error database");
-        }
-        cursor.close();
         mDatabase.close();
-        return songs;
-    }
-    public List<String> getAllSongsNames(){
-        open();
-        List<String> songs = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_All_SONGS, null);
-        cursor.moveToFirst();
-        try {
-            do{
-                if(!(cursor.getString(2)).equals("..goToRoot")) {
-                    songs.add(cursor.getString(2));
-                }
-            }while(cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            songs.add("Error database");
-        }
-        cursor.close();
-        mDatabase.close();
-        return songs;
-    }
-    public List<List<String>> getFilesForFolder(){
-        open();
-        List<List<String>> files = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_FOLDER, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_FOLDER + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(0));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                files.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            files.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return files;
-    }
-    public List<List<String>> getPathsForFolder(){
-        open();
-        List<List<String>> paths = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM " + TABLE_FOLDER, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_FOLDER + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(1));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                paths.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            paths.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return paths;
-    }
-    public List<String> getFolders(){
-        open();
-        List<String> folders = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_FOLDER, null);
-        cursor.moveToFirst();
-        try {
-            do{
-                folders.add(cursor.getString(1));
-            }while(cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            folders.add("Error database");
-        }
-        cursor.close();
-        mDatabase.close();
-        return folders;
-    }
-    public List<List<String>> getFilesForAlbums(){
-        open();
-        List<List<String>> files = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ALBUM, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_ALBUM + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(0));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                files.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            files.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return files;
-    }
-    public List<List<String>> getPathsForAlbums(){
-        open();
-        List<List<String>> paths = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_ALBUM + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(1));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                paths.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            paths.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return paths;
-    }
-    public List<String> getAlbums(){
-        open();
-        List<String> albums = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_ALBUM, null);
-        cursor.moveToFirst();
-        try {
-            do {
-                if(cursor.getString(1)!=null) {
-                    albums.add(cursor.getString(1));
-                }else{
-                    albums.add("");
-                }
-            } while (cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            albums.add("Error database");
-        }
-        cursor.close();
-        mDatabase.close();
-        return albums;
-    }
-    public List<List<String>> getFilesForArtists(){
-        open();
-        List<List<String>> files = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_ARTIST, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_ARTIST + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(0));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                files.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            files.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return files;
-    }
-    public List<List<String>> getPathsForArtists(){
-        open();
-        List<List<String>> paths = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM " + TABLE_ARTIST, null);
-        int count = cursorFolder.getCount();
-        try {
-            for (int i = 0; i < count; i++) {
-                Cursor cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_ARTIST + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(1));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                paths.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            paths.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return paths;
-    }
-    public List<String> getArtist(){
-        open();
-        List<String> artists = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_ARTIST, null);
-        cursor.moveToFirst();
-        try {
-            do {
-                if(cursor.getString(1) != null) {
-                    artists.add(cursor.getString(1));
-                }else{
-                    artists.add("");
-                }
-            } while (cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            artists.add("Error database");
-        }
-        cursor.close();
-        mDatabase.close();
-        return artists;
-    }
-    public List<List<String>> getFilesForMainFolders(){
-        open();
-        List<List<String>> files = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM "+ TABLE_MAIN_FOLDER, null);
-        int count = cursorFolder.getCount();
-        Cursor cursorFile;
-        try {
-            for (int i = 0; i < count; i++) {
-                cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_MAIN_FOLDER + " = " + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(0));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                files.add(fileNamesList);
-            }
-        }catch (CursorIndexOutOfBoundsException ci){
-            files.add(new ArrayList<String>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return files;
-    }
-    public List<List<String>> getPathsForMainFolders(){
-        open();
-        List<List<String>> paths = new ArrayList<>();
-        Cursor cursorFolder = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER, null);
-        int count = cursorFolder.getCount();
-        Cursor cursorFile;
-        try {
-            for (int i = 0; i < count; i++) {
-                cursorFile = mDatabase.rawQuery("SELECT * FROM " + TABLE_FILE + " WHERE "
-                        + COLUMN_ID_MAIN_FOLDER + "=" + (i+1), null);
-                List<String> fileNamesList = new ArrayList<>();
-                cursorFile.moveToFirst();
-                do {
-                    fileNamesList.add(cursorFile.getString(1));
-                } while (cursorFile.moveToNext());
-                cursorFile.close();
-                paths.add(fileNamesList);
-                Log.d("te3r"+count, fileNamesList.toString());
-            }
-        }catch (CursorIndexOutOfBoundsException c){
-            Log.d("Error", c.getMessage());
-            paths.add(new ArrayList<>(Arrays.asList(new String[]{"Error database"})));
-        }
-        cursorFolder.close();
-        mDatabase.close();
-        return paths;
-    }
-    public List<String> getMainFolders(){
-        open();
-        List<String> mainFolders = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_MAIN_FOLDER, null);
-        cursor.moveToFirst();
-        try {
-            do {
-                mainFolders.add(cursor.getString(1));
-            } while (cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException c){
-            mainFolders.add("Error database");
-        }
-        cursor.close();
-        mDatabase.close();
-        return mainFolders;
+        long endTime = System.currentTimeMillis();
+        Log.i(Constants.LOG_TAG, "Data fetched and processed in " + (endTime - startTime) + " ms.");
+        return items;
     }
 
+    //endregion
 
-    //Working with DB for Service
+    //region Fetch dependent lists
+
+    public List<List<String>> getFilesForFolder() {
+        return fetchDependentItems(FOLDERS, NAME);
+    }
+
+    public List<List<String>> getPathsForFolder() {
+        return fetchDependentItems(FOLDERS, PATH);
+    }
+
+    public List<List<String>> getFilesForAlbums() {
+        return fetchDependentItems(ALBUMS, NAME);
+    }
+
+    public List<List<String>> getPathsForAlbums() {
+        return fetchDependentItems(ALBUMS, PATH);
+    }
+
+    public List<List<String>> getFilesForArtists() {
+        return fetchDependentItems(ARTISTS, NAME);
+    }
+
+    public List<List<String>> getPathsForArtists() {
+        return fetchDependentItems(ARTISTS, PATH);
+    }
+
+    public List<List<String>> getFilesForMainFolders() {
+        return fetchDependentItems(MAIN_FOLDERS, NAME);
+    }
+
+    public List<List<String>> getPathsForMainFolders() {
+        return fetchDependentItems(MAIN_FOLDERS, PATH);
+    }
+
+    private List<List<String>> fetchDependentItems(String sourceTable, String filesTableField) {
+        createDbIfNotExist(mDatabase);
+        List<List<String>> items = new ArrayList<>();
+
+        // The query could look like this:
+        // "SELECT Folders.Name, Files.Name FROM Folders JOIN Files ON Folders.Id = Files.[Folders.Id] ORDER BY Folders.Name, Files.TrackNumber", null);
+        String query = String.format(
+                "SELECT %1$s.%3$s, %2$s.%6$s FROM %1$s JOIN %2$s ON %1$s.%4$s = %2$s.%7$s ORDER BY %1$s.%3$s, %2$s.%5$s",
+                sourceTable,
+                FILES,
+                NAME,
+                ID,
+                TRACK_NUMBER,
+                filesTableField,
+                getDependentIdColumnName(sourceTable));
+
+        Log.d(Constants.LOG_TAG, "Fetching items by query: \n" + query);
+        long startTime = System.currentTimeMillis();
+        Cursor cursor = mDatabase.rawQuery(query, null);
+
+        // Tracks item name from the source table
+        String currentItemName = null;
+
+        // List of sub-items related to current item name.
+        ArrayList<String> currentSubItems = null;
+
+        while (cursor.moveToNext()) {
+            if (!cursor.getString(0).equals(currentItemName)) {
+                // As all records are sorted by item name from source table,
+                // when we hit this condition, all sub-items related to the record from source table
+                // has already been processed. So we switch to processing of another item and its sub-items.
+                currentSubItems = new ArrayList<>();
+                items.add(currentSubItems);
+                currentItemName = cursor.getString(0);
+            }
+
+            currentSubItems.add(cursor.getString(1));
+        }
+
+        cursor.close();
+        mDatabase.close();
+        long endTime = System.currentTimeMillis();
+        Log.i(Constants.LOG_TAG, "Data fetched and processed in " + (endTime - startTime) + " ms.");
+        return items;
+    }
+
+    //endregion
+
+    //region Fetch simple lists
+
+    public List<String> getAllSongsPaths() {
+        return getSortedItemNames(FILES, PATH);
+    }
+
+    public List<String> getAllSongsNames() {
+        return getSortedItemNames(FILES, NAME);
+    }
+
+    public List<String> getFolders() {
+        return getSortedItemNames(FOLDERS, NAME);
+    }
+
+    public List<String> getAlbums() {
+        return getSortedItemNames(ALBUMS, NAME);
+    }
+
+    public List<String> getArtist() {
+        return getSortedItemNames(ARTISTS, NAME);
+    }
+
+    public List<String> getMainFolders() {
+        return getSortedItemNames(MAIN_FOLDERS, NAME);
+    }
+
+    private List<String> getSortedItemNames(String itemTable, String itemColumn) {
+        createDbIfNotExist(mDatabase);
+        List<String> items = new ArrayList<>();
+        Cursor cursor = mDatabase.rawQuery("SELECT " + itemColumn + " FROM " + itemTable + " ORDER BY " + itemColumn, null);
+        while (cursor.moveToNext()) {
+            items.add(cursor.getString(0));
+        }
+        cursor.close();
+        mDatabase.close();
+        return items;
+    }
+
+    //endregion
+
+    //region Working with DB for Service
 
     public List<String> getLastPlayList() {
-        open();
+        createDbIfNotExist(mDatabase);
         List<String> list = new ArrayList<>();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE, null);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + PLAY_SERVICES, null);
         cursor.moveToFirst();
-        do{
+        do {
             list.add(cursor.getString(1));
-        }while(cursor.moveToNext());
+        } while (cursor.moveToNext());
         cursor.close();
         mDatabase.close();
         return list;
     }
 
-    public int getLastPlayedTime(){
-        open();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
+    public int getLastPlayedTime() {
+        createDbIfNotExist(mDatabase);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + PLAY_SERVICE_ATTRIBUTES, null);
         cursor.moveToFirst();
         int lastTime = cursor.getInt(0);
         cursor.close();
         mDatabase.close();
         return lastTime;
     }
-    public int getLastPlayedNumber(){
-        open();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
+
+    public int getLastPlayedNumber() {
+        createDbIfNotExist(mDatabase);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + PLAY_SERVICE_ATTRIBUTES, null);
         cursor.moveToFirst();
         int lastNumber = cursor.getInt(1);
         cursor.close();
         mDatabase.close();
         return lastNumber;
     }
-    public boolean getLastPlayedState(){
-        open();
-        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + TABLE_PLAY_SERVICE_ATTRIBUTES, null);
+
+    public boolean getLastPlayedState() {
+        createDbIfNotExist(mDatabase);
+        Cursor cursor = mDatabase.rawQuery("SELECT * FROM " + PLAY_SERVICE_ATTRIBUTES, null);
         cursor.moveToFirst();
         boolean lastState = false;
-        if(cursor.getInt(2) == 1) {
+        if (cursor.getInt(2) == 1) {
             lastState = true;
         }
         cursor.close();
@@ -707,42 +389,41 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public void setLastPlayList(List<String> list) {
-        open();
+        createDbIfNotExist(mDatabase);
         Log.d("Test", "DATABASE is writing current trek list");
-        mDatabase.delete(TABLE_PLAY_SERVICE, null, null);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE);
-        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE);
+        mDatabase.delete(PLAY_SERVICES, null, null);
+        mDatabase.execSQL("DROP TABLE IF EXISTS " + PLAY_SERVICES);
+        mDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + PLAY_SERVICES + " (" +
+                ID + " INTEGER PRIMARY KEY, " + PATH + " TEXT);");
         for (int i = 0; i < list.size(); i++) {
             ContentValues values = new ContentValues();
-            values.put(COLUMN_PATH_PLAY_SERVICE, list.get(i));
+            values.put(PATH, list.get(i));
             mDatabase.insert(
-                    DbHelper.TABLE_PLAY_SERVICE,
+                    PLAY_SERVICES,
                     null,
                     values);
         }
         mDatabase.close();
     }
-    public void setPlaylistAttributes(int time, int number, boolean shuffle){
-        open();
-        mDatabase.delete(TABLE_PLAY_SERVICE_ATTRIBUTES, null, null);
-        mDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PLAY_SERVICE_ATTRIBUTES);
-        mDatabase.execSQL(CREATE_TABLE_PLAY_SERVICE_ATTRIBUTES);
+
+    public void setPlaylistAttributes(int time, int number, boolean shuffle) {
+        createDbIfNotExist(mDatabase);
+        mDatabase.delete(PLAY_SERVICE_ATTRIBUTES, null, null);
+        mDatabase.execSQL("DROP TABLE IF EXISTS " + PLAY_SERVICE_ATTRIBUTES);
+        mDatabase.execSQL("CREATE TABLE IF NOT EXISTS " + PLAY_SERVICE_ATTRIBUTES + " (" +
+                LAST_PLAYED_TIME + " INTEGER, " + LAST_PLAYED_NUMBER + " INTEGER, " +
+                LAST_PLAYED_SHUFFLE_STATE + " BOOLEAN);");
         ContentValues values = new ContentValues();
-        values.put(COLUMN_PLAYED_TIME, time);
-        values.put(COLUMN_PLAYED_NUMBER, number);
-        if(shuffle) {
-            values.put(COLUMN_PLAYED_SHUFFLE, 1);
-        }else{
-            values.put(COLUMN_PLAYED_SHUFFLE, 0);
+        values.put(LAST_PLAYED_TIME, time);
+        values.put(LAST_PLAYED_NUMBER, number);
+        if (shuffle) {
+            values.put(LAST_PLAYED_SHUFFLE_STATE, 1);
+        } else {
+            values.put(LAST_PLAYED_SHUFFLE_STATE, 0);
         }
-        mDatabase.insert(
-                DbHelper.TABLE_PLAY_SERVICE_ATTRIBUTES,
-                null,
-                values);
+        mDatabase.insert(PLAY_SERVICE_ATTRIBUTES, null, values);
         mDatabase.close();
     }
+
+    //endregion
 }
-
-
-
-

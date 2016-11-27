@@ -1,5 +1,6 @@
 package com.example.vov4ik.musicplayer;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -34,52 +34,38 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static android.R.attr.id;
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static Boolean executeTrigger = false;
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final int REQUEST_WRITE_STORAGE = 112;
+    private static final String ACTIVITY_WAS_RESTARTED_FLAG = "ActivityWasRestarted";
+
+    private PagerAdapter adapter;
     private ViewPager viewPager;
-    private static PagerAdapter adapter;
-    final static String EXTRA_FOR_CLICKED_FILE = "extra for clicked file";
-    final static String EXTRA_FOR_PATHS = "extra for paths";
     private AsyncTask async;
     private boolean asyncStop = false;
-    public static List<String> playlistList = new ArrayList<>();
-    private static Context context;
     private boolean backgroundExecuteTrigger = false;
+    private List<String> playlistList = new ArrayList<>();
 
-
-    public static PagerAdapter getAdapter() {
-        return adapter;
+    private Runnable getRestartMainActivityRunnable() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                Intent restartIntent = new Intent(getApplicationContext(), MainActivity.class);
+                restartIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                restartIntent.putExtra(ACTIVITY_WAS_RESTARTED_FLAG, true);
+                getApplicationContext().startActivity(restartIntent);
+            }
+        };
     }
-
-    public static Context getContext() {
-        return context;
-    }
-
-    public static Boolean getExecuteTrigger() {
-        return executeTrigger;
-    }
-
-    public static void setExecuteTrigger(Boolean executeTrigger) {
-        MainActivity.executeTrigger = executeTrigger;
-    }
-
-    private static final int REQUEST_WRITE_STORAGE = 112;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        MainActivity.context = getApplicationContext();
         setContentView(R.layout.activity_main);
 
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
@@ -92,128 +78,76 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initialize() {
-//        new DbConnector().fillerForDb(getContext());
+        if (PlayService.getPlayer() == null) {
+            if (getIntent().getBooleanExtra(ACTIVITY_WAS_RESTARTED_FLAG, false)) {
+                DatabaseUpdater dbUpdater = new DatabaseUpdater(getApplicationContext());
+                dbUpdater.updateDatabase(getRestartMainActivityRunnable());
+            }
 
-        if(PlayService.getPlayer() == null) {
-            setExecuteTrigger(true);
-            RefreshDb rDb = new RefreshDb();
-            rDb.execute();
-        }
-
-
-        if(PlayService.getPlayer()==null) {
-            Intent intent = new Intent(this, PlayService.class);
-            startService(intent);
-            Intent intent1 = new Intent(this, AutoAudioStopper.class);
-            startService(intent1);
+            startService(new Intent(this, PlayService.class));
+            startService(new Intent(this, AutoAudioStopper.class));
 
             AudioManager am = (AudioManager) getApplicationContext().getSystemService(AUDIO_SERVICE);
 
             AutoAudioStopper.getInstance().setAudioManager(am);
-            AutoAudioStopper.getInstance().setContext(this);
+            AutoAudioStopper.getInstance().setContext(getApplicationContext());
             ComponentName mReceiverComponent = new ComponentName(this, HeadphonesClickReceiver.class);
             am.registerMediaButtonEventReceiver(mReceiverComponent);
         }
-//        if(!PlayService.isPlayingNow()) {
-//            PlayService.startPlaying();
-//            PlayService.pausePlaying();
-//        }
 
-//        asyncStop = false;
-//        if(!backgroundExecuteTrigger) {
-//            async = new FetchTask().execute();
-//        }
-        if(getIntent()!=null) {
+        processActivityIntent();
+        setupToolbar();
+        setupTabs();
+        setupPlaybackControlButtons();
+        setupSeekBar();
+        updatePlaybackProgress();
+
+        asyncStop = false;
+        if (!backgroundExecuteTrigger) {
+            async = new FetchTask().execute();
+        }
+    }
+
+    private void processActivityIntent() {
+        if (getIntent() != null) {
             Log.d("Test", "Main A INTENT!!!!!");
             String intentAction = getIntent().getAction();
             if (Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
                 Log.d("Test", "Media_Button");
-                KeyEvent event = (KeyEvent) getIntent()
-                        .getParcelableExtra(Intent.EXTRA_KEY_EVENT);
-                Log.d("Test", "Media_Button"+event.getAction());
-                Log.d("Test", "Media_Button"+event.getKeyCode());
-
+                KeyEvent event = getIntent().getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                Log.d("Test", "Media_Button" + event.getAction());
+                Log.d("Test", "Media_Button" + event.getKeyCode());
             }
 
-        }
-        if(getIntent()!=null&&getIntent().getStringExtra("command")!=null) {
-            Log.d("Test", "Main A "+getIntent().getStringExtra("command"));
-        }
-        if(getIntent()!=null&&getIntent().getData()!=null) {
-            Intent intent1 = new Intent(this, PlayService.class);
-            List<String> l = new ArrayList<>();
-            l.add(getIntent().getData().getPath());
-            boolean nullPlayer = false;
-            if(PlayService.getPlayer() != null) {
-                PlayService.setPath(l);
-                PlayService.setTrekNumber(0);
-            }else{
-                nullPlayer = true;
-            }
-            intent1.putExtra("CLICKED_SONG", getIntent().getData().getPath());
-            intent1.setAction(PlayService.PLAY_ACTION);
-            startService(intent1);
-            if(nullPlayer){
-                PlayService.setPath(l);
-            }
-            Intent intent = new Intent(this, PlayerActivity.class);
-            startActivity(intent);
-            finish();
-        }
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        assert toolbar != null;
-        ImageView search = (ImageView) toolbar.findViewById(R.id.search_icon);
-        search.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getContext(), SearchActivity.class);
+            if (getIntent().getData() != null) {
+                Intent intent1 = new Intent(this, PlayService.class);
+                List<String> l = new ArrayList<>();
+                l.add(getIntent().getData().getPath());
+                boolean nullPlayer = false;
+                if (PlayService.getPlayer() != null) {
+                    PlayService.setPath(l);
+                    PlayService.setTrekNumber(0);
+                } else {
+                    nullPlayer = true;
+                }
+                intent1.putExtra("CLICKED_SONG", getIntent().getData().getPath());
+                intent1.setAction(PlayService.PLAY_ACTION);
+                startService(intent1);
+                if (nullPlayer) {
+                    PlayService.setPath(l);
+                }
+                Intent intent = new Intent(this, PlayerActivity.class);
                 startActivity(intent);
                 finish();
             }
-        });
-        List<String> listOfMods;
-        try {
-            listOfMods = DbConnector.getVisibleTabs(getContext());  //{"Album","All Songs", "Artist",  "Folder(All Content)", "Folder","Playlist"};
-        }catch(CursorIndexOutOfBoundsException c){
-            listOfMods = TabConstructor.getListOfTabs();
         }
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        assert tabLayout != null;
-        for (String s: listOfMods) {
-            tabLayout.addTab(tabLayout.newTab().setText(s));
-        }
-//        tabLayout.setTabGravity(TabLayout.MODE_FIXED);
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-//        tabLayout.setTabGravity(TabLayout.SCROLL_INDICATOR_RIGHT);
+    }
 
-        viewPager = (ViewPager) findViewById(R.id.pager);
-        adapter = new PagerAdapter
-                (getSupportFragmentManager(), tabLayout.getTabCount(), getContext());
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-
-        int[] ID = new int[]{R.id.layoutForButton1, R.id.layoutForButton2,R.id.layoutForButton3,R.id.layoutForButton4,R.id.layoutForButton5};
-        final LinearLayout[] l= new LinearLayout[5];
-        for(int i = 0; i<ID.length; i++){
-            l[i] = (LinearLayout)findViewById(ID[i]);
+    private void setupPlaybackControlButtons() {
+        int[] ID = new int[]{R.id.layoutForButton1, R.id.layoutForButton2, R.id.layoutForButton3, R.id.layoutForButton4, R.id.layoutForButton5};
+        final LinearLayout[] l = new LinearLayout[5];
+        for (int i = 0; i < ID.length; i++) {
+            l[i] = (LinearLayout) findViewById(ID[i]);
             assert l[i] != null;
         }
         final Button playButton = (Button) findViewById(R.id.playButton);
@@ -230,23 +164,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 l[2].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                if(!PlayService.isPlayingNow()){
-//                    if(PlayService.getPlayer()!=null) {
-//                        PlayService.startPlaying();
-//
-//                    } else {
+                if (!PlayService.isPlayingNow()) {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                     intent1.setAction(PlayService.PLAY_ACTION);
                     getApplicationContext().startService(intent1);
-//                    }
-                }else{
-//                    PlayService.pausePlaying();
+                } else {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                     intent1.setAction(PlayService.PAUSE_ACTION);
                     getApplicationContext().startService(intent1);
                 }
                 buttonChanger();
-                progressWriter();
+                updatePlaybackProgress();
 
             }
         });
@@ -263,17 +191,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 l[3].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                if(PlayService.getPlayer()!=null) {
-//                        PlayService.nextSong();
-//                } else {
-//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.next");
-//                    getApplicationContext().startService(intent1);
+                if (PlayService.getPlayer() != null) {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                     intent1.setAction(PlayService.NEXT_ACTION);
                     getApplicationContext().startService(intent1);
                 }
-                progressWriter();
+                updatePlaybackProgress();
 
             }
         });
@@ -290,19 +213,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 l[1].setBackground(getResources().getDrawable(R.drawable.keys_shape));
-                if(PlayService.getPlayer()!=null) {
-//
-//                        PlayService.previous();
-//
-//                } else {
-//                    Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
-//                    intent1.setAction("com.example.vov4ik.musicplayer.PlayService.prev");
-//                    getApplicationContext().startService(intent1);
+                if (PlayService.getPlayer() != null) {
                     Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                     intent1.setAction(PlayService.PREV_ACTION);
                     getApplicationContext().startService(intent1);
                 }
-                progressWriter();
+                updatePlaybackProgress();
             }
         });
         Button showPlaylist = (Button) findViewById(R.id.openPlayerList);
@@ -325,9 +241,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         final Button shuffle = (Button) findViewById(R.id.shuffle);
         assert shuffle != null;
-        if(PlayService.isShuffle()){
+        if (PlayService.isShuffle()) {
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
-        }else{
+        } else {
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
         }
         shuffle.setOnTouchListener(new View.OnTouchListener() {
@@ -350,7 +266,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+    }
 
+    private void setupSeekBar() {
         SeekBar seekBar = (SeekBar) findViewById(R.id.seek_bar);
         assert seekBar != null;
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -386,7 +304,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (PlayService.getPlayer() != null) {
                     PlayService.setLastPlayedTime(progressChanged);
                     if (PlayService.isPlayingNow()) {
-//                       PlayService.startPlaying();
                         Intent intent1 = new Intent(getApplicationContext(), PlayService.class);
                         intent1.setAction(PlayService.PLAY_ACTION);
                         getApplicationContext().startService(intent1);
@@ -398,31 +315,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-        progressWriter();
-        asyncStop = false;
-        if(!backgroundExecuteTrigger) {
-            async = new FetchTask().execute();
+    }
+
+    private void setupToolbar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ImageView search = (ImageView) toolbar.findViewById(R.id.search_icon);
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+    private void setupTabs() {
+        List<String> listOfMods;
+        try {
+            listOfMods = DbConnector.getVisibleTabs(this);  //{"Album","All Songs", "Artist",  "Folder(All Content)", "Folder","Playlist"};
+        } catch (CursorIndexOutOfBoundsException c) {
+            listOfMods = TabConstructor.getListOfTabs();
         }
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        assert tabLayout != null;
+        for (String s : listOfMods) {
+            tabLayout.addTab(tabLayout.newTab().setText(s));
+        }
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        adapter = new PagerAdapter
+                (getSupportFragmentManager(), tabLayout.getTabCount(), this);
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode)
-        {
+        switch (requestCode) {
             case REQUEST_WRITE_STORAGE: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     initialize();
-                } else
-                {
+                } else {
                     Toast.makeText(this, "The app was not allowed to write to your storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
                 }
             }
         }
     }
 
-    private void progressWriter(){
+    private void updatePlaybackProgress() {
         TextView currentTime = (TextView) findViewById(R.id.current_time);
         assert currentTime != null;
         TextView durationTime = (TextView) findViewById(R.id.current_duration);
@@ -434,29 +393,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int dur = PlayService.duration();
         int cur = PlayService.currentTime();
         song.setText(PlayService.trekName());
-        if(!PlayService.isPlayingNow()&&(PlayService.trekName().equals("no - file")||PlayService.trekName().equals("null - null"))){
+        if (!PlayService.isPlayingNow() && (PlayService.trekName().equals("no - file") || PlayService.trekName().equals("null - null"))) {
             try {
-                String f = (DbConnector.getLastPlayList(getContext()).get(DbConnector.getLastPlayNumber(getContext())));
+                String f = (DbConnector.getLastPlayList(this).get(DbConnector.getLastPlayNumber(this)));
                 MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                 mmr.setDataSource(f);
                 String artist = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
                 String title = (mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
                 song.setText(artist + " - " + title);
                 dur = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                cur = DbConnector.getLastPlayTime(getContext());
-            }catch(Exception c){//CursorIndexOutOfBoundsException c){
+                cur = DbConnector.getLastPlayTime(this);
+            } catch (Exception c) {//CursorIndexOutOfBoundsException c){
                 Log.d("Error", c.getMessage());
             }
         }
 
 
-        String current =  cur/ 60000 + " : " + (((cur / 1000) % 60 >= 10) ? ((cur / 1000) % 60) : ("0" + (cur / 1000) % 60));
+        String current = cur / 60000 + " : " + (((cur / 1000) % 60 >= 10) ? ((cur / 1000) % 60) : ("0" + (cur / 1000) % 60));
         String duration = dur / 60000 + " : " + (((dur / 1000) % 60 >= 10) ? ((dur / 1000) % 60) : ("0" + (dur / 1000) % 60));
 
         currentTime.setText(current);
 
         durationTime.setText(duration);
-
 
 
         seekBar.setMax(dur);
@@ -469,26 +427,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.playListLayoutInMainActivity);
         assert linearLayout != null;
         final ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
-        if(v.getId()==0 || playlistList.get(v.getId()).equals("No Playlists available")){
-            if(playlistList.contains("No Playlists available")){
+        if (v.getId() == 0 || playlistList.get(v.getId()).equals("No Playlists available")) {
+            if (playlistList.contains("No Playlists available")) {
                 playlistList.remove("No Playlists available");
             }
-            final LinearLayout inputLayout = (LinearLayout)findViewById(R.id.inputLayout);
+            final LinearLayout inputLayout = (LinearLayout) findViewById(R.id.inputLayout);
             assert inputLayout != null;
             inputLayout.setVisibility(View.VISIBLE);
-            final EditText editText = (EditText)findViewById(R.id.addNewPlaylist);
+            final EditText editText = (EditText) findViewById(R.id.addNewPlaylist);
             assert editText != null;
-            Button addButton = (Button)findViewById(R.id.confirm);
+            Button addButton = (Button) findViewById(R.id.confirm);
             assert addButton != null;
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    if(MainActivity.playlistList.contains(editText.getText().toString())){
+                    if (playlistList.contains(editText.getText().toString())) {
                         Toast.makeText(getApplicationContext(), "This name exist!!", Toast.LENGTH_SHORT).show();
-                    }else {
-                        MainActivity.playlistList.add(editText.getText().toString());
+                    } else {
+                        playlistList.add(editText.getText().toString());
                         editText.setText("");
                     }
                     inputLayout.setVisibility(View.GONE);
@@ -496,8 +454,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
 
-        }else {
-            DbConnector.setPlaylist(getApplicationContext(),playlistList.get(v.getId()), ff.getSelectedPaths());
+        } else {
+            DbConnector.setPlaylist(getApplicationContext(), playlistList.get(v.getId()), ff.getSelectedPaths());
             ViewPager pager = (ViewPager) findViewById(R.id.pager);
             assert pager != null;
             pager.setVisibility(ViewPager.VISIBLE);
@@ -510,40 +468,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ff.unselectMusicItems();
             }
         }
-
-
-
     }
-
 
     private class FetchTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            Thread t = new Thread(){
-                        @Override
-                        public void run() {
-                            try {
-                                backgroundExecuteTrigger = true;
-                                while (!isInterrupted()&&!asyncStop) {
-                                    Log.d("Test", "MainActivity "+Thread.currentThread().getName());
-                                    Thread.sleep(500);
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if(PlayService.isPlayingNow()) {
-                                                progressWriter();
-                                            }
-                                            buttonChanger();
-                                        }
-                                    });
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        backgroundExecuteTrigger = true;
+                        while (!isInterrupted() && !asyncStop) {
+                            Log.d("Test", "MainActivity " + Thread.currentThread().getName());
+                            Thread.sleep(500);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (PlayService.isPlayingNow()) {
+                                        updatePlaybackProgress();
+                                    }
+                                    buttonChanger();
                                 }
-
-                            } catch (InterruptedException e) {
-                                Log.d("Test", "sleep failure");
-                            }
+                            });
                         }
+
+                    } catch (InterruptedException e) {
+                        Log.d("Test", "sleep failure");
+                    }
+                }
             };
-                t.start();
+            t.start();
             return null;
         }
 
@@ -555,18 +509,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onStop() {
-//        asyncStop = true;
-//        async.cancel(true);
-//        if(!async.isCancelled()){
-//            async.cancel(true);
-//        }
-
         super.onStop();
     }
 
     @Override
-    protected void onResume(){
-        if(!backgroundExecuteTrigger) {
+    protected void onResume() {
+        if (!backgroundExecuteTrigger) {
             asyncStop = false;
             async = new FetchTask().execute();
         }
@@ -574,21 +522,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonChanger();
     }
 
-    private void buttonChanger(){
-        if(PlayService.isPlayingNow()){
+    private void buttonChanger() {
+        if (PlayService.isPlayingNow()) {
             Button playButton = (Button) findViewById(R.id.playButton);
             assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.pause_png));
-        }else{
+        } else {
             Button playButton = (Button) findViewById(R.id.playButton);
             assert playButton != null;
             playButton.setBackground(getResources().getDrawable(R.drawable.play_button_png));
         }
         final Button shuffle = (Button) findViewById(R.id.shuffle);
         assert shuffle != null;
-        if(PlayService.isShuffle()){
+        if (PlayService.isShuffle()) {
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_on));
-        }else{
+        } else {
             shuffle.setBackground(getResources().getDrawable(R.drawable.shuffle_off));
         }
     }
@@ -597,19 +545,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-    }
-    private class RefreshDb extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            new DbConnector().fillerForDb(getApplicationContext());
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            setExecuteTrigger(false);
-        }
     }
 
     @Override
@@ -627,12 +562,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             linearLayout1.removeAllViews();
             playlistList = new ArrayList<>();
         }
-        if (ff.isCheckingTrigger()){
+        if (ff.isCheckingTrigger()) {
             ff.unselectMusicItems();
-        }else if(ff.isFolderTrigger()&&(!ff.isAllSongsFragment())) {
+        } else if (ff.isFolderTrigger() && (!ff.isAllSongsFragment())) {
             ff.show(ff.getPreviousList());
             ff.setFolderTrigger(false);
-        }else{
+        } else {
             super.onBackPressed();
         }
     }
@@ -651,30 +586,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.refreshFilesButton) {
-            if (!getExecuteTrigger()) {
-                setExecuteTrigger(true);
-                RefreshDb rDb = new RefreshDb();
-                rDb.execute();
-            }else{
-                Context context = getApplicationContext();
-                int duration = Toast.LENGTH_SHORT;
-                CharSequence text = "Updating is running!";
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
+            DatabaseUpdater dbUpdater = new DatabaseUpdater(getApplicationContext());
+            if (!dbUpdater.updateDatabase(getRestartMainActivityRunnable())) {
+                Toast.makeText(this, "Updating is running!", Toast.LENGTH_SHORT).show();
             }
         }
+
         if (id == R.id.addSelected) {
-            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
-            if (ff.getSelectedPaths().size()>0) {
-//                Intent intent = new Intent(this, PlayerActivity.class);
-//                intent.putExtra(EXTRA_FOR_PATHS, ff.getSelectedPaths().toArray(new String[ff.getSelectedPaths().size()]));
-//                intent.putExtra(EXTRA_FOR_CLICKED_FILE, "ADD");
-//                startActivity(intent);
+            ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
+            if (ff.getSelectedPaths().size() > 0) {
                 PlayService.addPaths(ff.getSelectedPaths());
                 ff.unselectMusicItems();
-            }else{
+            } else {
                 Context context = getApplicationContext();
                 int duration = Toast.LENGTH_SHORT;
                 CharSequence text = "Make shore, that you have selected some thing! ";
@@ -684,8 +608,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         if (id == R.id.addPlaylistInMenu) {
-            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
-            if (ff.getSelectedPaths().size()>0) {
+            ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
+            if (ff.getSelectedPaths().size() > 0) {
                 ViewPager pager = (ViewPager) findViewById(R.id.pager);
                 assert pager != null;
                 pager.setVisibility(ViewPager.INVISIBLE);
@@ -694,34 +618,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 linearLayout.setVisibility(LinearLayout.VISIBLE);
                 playlistList.add("+ Add New Playlist");
                 playlistList.addAll(DbConnector.getPlaylist(getApplicationContext()));
-               showView();
-            }else{
+                showView();
+            } else {
                 Toast.makeText(getApplicationContext(), "Make shore, that you have selected some thing! ", Toast.LENGTH_SHORT).show();
             }
         }
         if (id == R.id.removePlaylistInMenu) {
-            ISelectableFragment ff = (ISelectableFragment)adapter.getItem(viewPager.getCurrentItem());
-            if(ff.getSelectedPlaylist().size()>0){
-                for(String s: ff.getSelectedPlaylist()){
+            ISelectableFragment ff = (ISelectableFragment) adapter.getItem(viewPager.getCurrentItem());
+            if (ff.getSelectedPlaylist().size() > 0) {
+                for (String s : ff.getSelectedPlaylist()) {
                     DbConnector.removePlaylist(getApplicationContext(), s);
                     ff.reloadForPlaylist();
                 }
-            }else if(ff.getSelectedPaths().size()>0&&ff.getNumberOfPlaylist()>0){
-                DbConnector.removeFilesFromPlaylist(getApplicationContext(), ff.getPreviousList().get(ff.getNumberOfPlaylist()-10), ff.getSelectedPaths());
+            } else if (ff.getSelectedPaths().size() > 0 && ff.getNumberOfPlaylist() > 0) {
+                DbConnector.removeFilesFromPlaylist(getApplicationContext(), ff.getPreviousList().get(ff.getNumberOfPlaylist() - 10), ff.getSelectedPaths());
                 ff.reloadForPlaylist();
-            }
-            else{
+            } else {
                 Toast.makeText(getApplicationContext(), "Please, Select something aft first!", Toast.LENGTH_SHORT).show();
             }
         }
-        if(id == R.id.startTabActivity){
+        if (id == R.id.startTabActivity) {
             Intent intent = new Intent(this, TabCheckerActivity.class);
             startActivity(intent);
             finish();
         }
         return super.onOptionsItemSelected(item);
     }
-    private void showView(){
+
+    private void showView() {
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.showPlaylistLayoutInMainActivity);
         assert linearLayout != null;
         linearLayout.removeAllViews();
@@ -737,33 +661,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mlp.setMargins(40, 15, 0, 15);
         }
     }
-//    public boolean isMyServiceRunning(Class<?> serviceClass) {
-//        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-//            if (serviceClass.getName().equals(service.service.getClassName())) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-
-
 
     @Override
     protected void onDestroy() {
-//        AlarmManager manager;
-//        PendingIntent pendingIntent;
-//        manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//
-//
-////      START NotificationClass.sendNotification();
-//        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
-//        pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
-//        int interval = 180000;
-//        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, System.currentTimeMillis(), interval, pendingIntent);
         asyncStop = true;
         async.cancel(true);
-        if(!async.isCancelled()){
+        if (!async.isCancelled()) {
             async.cancel(true);
         }
         Thread.currentThread().interrupt();

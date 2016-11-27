@@ -3,7 +3,6 @@ package com.example.vov4ik.musicplayer;
 import android.content.Context;
 import android.database.CursorIndexOutOfBoundsException;
 import android.media.MediaMetadataRetriever;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -25,8 +24,6 @@ public class DbConnector {
             "mnt",
             "d"));
 
-    private HashSet<String> rootFolderPaths;
-
     private ArrayList<MusicFile> listMusicFiles;
     private HashMap<String, MusicFile> existingMusicFiles;
 
@@ -39,37 +36,32 @@ public class DbConnector {
         File deviceRoot = new File("/");
         File[] rootFolderFiles = deviceRoot.listFiles();
         if (rootFolderFiles == null) {
-            Log.e("MusicPlayer", "Error accessing device filesystem. Check if app has proper permissions.");
+            Log.e(Constants.LOG_TAG, "Error accessing device filesystem. Check if app has proper permissions.");
             return;
         }
 
-        rootFolderPaths = new HashSet<>();
-        for (File f : rootFolderFiles) {
-            rootFolderPaths.add(f.getPath());
-        }
-
         try {
-            Log.d("MusicPlayer", "Obtaining existing music files from database.");
+            Log.d(Constants.LOG_TAG, "Obtaining existing music files from database.");
             List<MusicFile> existingMusicFilesFromDb = getMusicFilesForSearch(context);
             if (existingMusicFilesFromDb != null) {
                 for (MusicFile m : existingMusicFilesFromDb) {
                     existingMusicFiles.put(m.getPath(), m);
                 }
 
-                Log.d("MusicPlayer", "Got " + listMusicFiles.size() + " music files.");
+                Log.d(Constants.LOG_TAG, "Got " + listMusicFiles.size() + " music files.");
             }
         } catch (CursorIndexOutOfBoundsException ex) {
-            Log.e("MusicPlayer", ex.getMessage(), ex);
+            Log.e(Constants.LOG_TAG, ex.getMessage(), ex);
         }
 
-        Log.d("MusicPlayer", "Start filesystem scanning.");
+        Log.d(Constants.LOG_TAG, "Start filesystem scanning.");
         scanForMusicFiles(rootFolderFiles, 0);
-        Log.d("MusicPlayer", "Filesystem scanning complete. Found " + listMusicFiles.size() + " music files.");
-        Log.d("MusicPlayer", "Deleting old database.");
+        Log.d(Constants.LOG_TAG, "Filesystem scanning complete. Found " + listMusicFiles.size() + " music files.");
+        Log.d(Constants.LOG_TAG, "Deleting old database.");
         DbConnector.deleteDb(context);
-        Log.d("MusicPlayer", "Creating new database with found files.");
+        Log.d(Constants.LOG_TAG, "Creating new database with found files.");
         new DbHelper(context).musicFileFiller(listMusicFiles);
-        Log.d("MusicPlayer", "Database created successfully.");
+        Log.d(Constants.LOG_TAG, "Database created successfully.");
     }
 
     private void scanForMusicFiles(File[] files, int folderScanDepth) {
@@ -131,6 +123,7 @@ public class DbConnector {
         String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
         musicFile.setArtist(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
         musicFile.setAlbum(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+        musicFile.setTrackNumber(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
         mmr.release();
         musicFile.setTitle(title == null || title.isEmpty() ? file.getName() : title);
         musicFile.setPath(filePath);
@@ -199,7 +192,7 @@ public class DbConnector {
     }
 
     public static void deleteDb(Context context) {
-        new DbHelper(context).delete();
+        new DbHelper(context).deleteDb();
     }
 
     public static List<String> getLastPlayList(Context context) {

@@ -12,9 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by vov4ik on 9/19/2016.
- */
 public class AllSongsFragment extends MusicListFragment {
     final static String EXTRA_FOR_FILES = "extra for files";
     private static MusicItemsList musicItemsList;
@@ -81,9 +78,9 @@ public class AllSongsFragment extends MusicListFragment {
 //            if(PlayService.getPlayer()!=null) {
 //                PlayService.startPlaying();
 //            } else {
-                Intent intent1 = new Intent(MainActivity.getContext(), PlayService.class);
+                Intent intent1 = new Intent(getContext(), PlayService.class);
                 intent1.setAction(PlayService.PLAY_ACTION);
-                MainActivity.getContext().startService(intent1);
+                getContext().startService(intent1);
 //                PlayService.startPlaying();
 //            }
         }else {
@@ -113,7 +110,7 @@ public class AllSongsFragment extends MusicListFragment {
             getMusicItemsList().setSelectedPaths(getMusicItemsList().getPath().get(getMusicItemsList().getNumberOfFolder()).get(position));
             RecyclerView.Adapter mAdapter = new RecyclerViewAdapter(this, (getMusicItemsList().getMusicFiles().get(getMusicItemsList().getNumberOfFolder())),
                             getMusicItemsList().getPath(), getMusicItemsList().getCheckedList(), getMusicItemsList().isCheckingTrigger(),
-                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, MainActivity.getContext(), getMusicItemsList().isAllSongsFragment());
+                            getMusicItemsList().isFolderTrigger(),getMusicItemsList().getNumberOfFolder(), false, getContext(), getMusicItemsList().isAllSongsFragment());
             getMusicItemsList().getRecyclerView().setAdapter(mAdapter);
             return true;
         }catch(IllegalStateException il){
