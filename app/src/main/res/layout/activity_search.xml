@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.example.vov4ik.musicplayer.SearchActivity">
+    tools:context="com.example.vov4ik.musicplayer.screens.search.SearchActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -16,26 +16,21 @@
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
+            android:elevation="4dp"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay">
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/toolbar_content">
                 <ImageView
                     android:id="@+id/back_icon"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:contentDescription="Back"
-                    android:src="@drawable/back_png"
-                    android:layout_gravity="top|start"
-                    app:layout_collapseMode="pin"/>
-            </RelativeLayout>
+                    android:paddingStart="30dp"
+                    android:paddingEnd="30dp"
+                    style="@style/Widget.Player.Button.Background"
+                    app:srcCompat="@drawable/ic_back_white_24dp"/>
         </android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
-
-    <include layout="@layout/content_search"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
@@ -43,7 +38,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/plus"/>
+        style="@style/Widget.Player.Button.Background"
+        app:srcCompat="@drawable/ic_add_black_24dp"/>
+
+    <include layout="@layout/content_search"/>
 
 
 </android.support.design.widget.CoordinatorLayout>

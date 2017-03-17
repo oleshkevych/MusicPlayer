@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+        <CheckBox
+            android:id="@+id/checkBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:paddingRight="16dp"
+        android:paddingLeft="16dp"
+        style="@style/Widget.Player.Button.Background"
+        android:orientation="vertical"
+        tools:background="@color/black_overlay">
+        <TextView
+            android:id="@+id/musicFileName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:textSize="16sp"
+            tools:text="hjedrfvbguiqewbrvuiqewbrvuibrevuibeuivberuivkjbnbbueirntebre"
+            android:maxLines="1"/>
+        <TextView
+            android:id="@+id/path"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:textSize="10sp"
+            tools:text="hjedrfvbguiqewbrvirgjoirgjo[irgjoiruiqewbrvuibrevuibeuivberuivbueirntebre"
+            android:maxLines="1"/>
+    </RelativeLayout>
+</LinearLayout>

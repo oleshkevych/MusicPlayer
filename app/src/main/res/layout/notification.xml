@@ -1,107 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="horizontal"
+              xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="80dp"
+              android:background="@color/colorNotificationBackground"
+              android:orientation="horizontal">
+
     <ImageView
         android:id="@+id/icon_notification"
         android:layout_width="58dp"
         android:layout_height="match_parent"
-        android:contentDescription="icon"
+        android:layout_margin="5dp"
         android:background="@color/colorPrimaryBlack"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@color/colorNotificationBackground">
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/closeNotif"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentEnd="true"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_close_white_24dp"/>
+
+        <TextView
+            android:id="@+id/notification_trek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:layout_toStartOf="@id/closeNotif"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:paddingStart="10dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textColor="@color/colorNotificationText"
+            android:textSize="15sp"
+            tools:text="wibeuiwbvuiewrbvuiebv"/>
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="35dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="65dp"
+            android:layout_marginStart="30dp"
             android:orientation="horizontal">
 
-            <!--<TextView-->
-                <!--android:id="@+id/notification_artist"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:textSize="12sp"-->
-                <!--android:paddingLeft="20dp"-->
-                <!--android:layout_marginTop="2dp"-->
-                <!--android:textColor="@color/colorNotificationText"/>-->
-            <TextView
-                android:id="@+id/notification_trek"
-                android:layout_width="0dp"
-                android:layout_weight="15"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                android:marqueeRepeatLimit ="marquee_forever"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:scrollHorizontally="true"
-                android:textSize="15sp"
-                android:paddingLeft="10dp"
-                android:layout_marginTop="7dp"
-                android:textColor="@color/colorNotificationText"/>
+            <ImageButton
+                android:id="@+id/previousButtonNotif"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:layout_weight="1"
+                android:src="@drawable/ic_previous_white_24dp"/>
 
-            <Button
-                android:layout_weight="1"
-                android:id="@+id/closeNotif"
-                android:layout_width="0dp"
-                android:layout_height="18dp"
-                android:layout_margin="5dp"
-                android:background="@drawable/close"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:layout_gravity="bottom"
-            android:orientation="horizontal">
-            <LinearLayout
+            <ImageButton
+                android:id="@+id/playButtonNotif"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_width="wrap_content"
-                android:gravity="center"
-                android:layout_gravity="center">
-                <Button
-                    android:id="@+id/previousButtonNotif"
-                    android:layout_width="25dp"
-                    android:layout_height="match_parent"
-                    android:padding="5dp"
-                    android:background="@drawable/previous_png"/>
-            </LinearLayout>
-            <RelativeLayout
-                android:layout_width="wrap_content"
+                android:background="@android:color/transparent"
+                style="@style/Widget.Player.Button.Background"
+                android:src="@drawable/ic_play_white_24dp"/>
+
+            <ImageButton
+                android:id="@+id/pauseButtonNotif"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:layout_gravity="center">
-                <Button
-                    android:id="@+id/playButtonNotif"
-                    android:layout_width="25dp"
-                    android:layout_height="match_parent"
-                    android:visibility="invisible"
-                    android:background="@drawable/play_button_png"/>
-                <Button
-                    android:id="@+id/pauseButtonNotif"
-                    android:layout_width="25dp"
-                    android:layout_height="match_parent"
-                    android:visibility="invisible"
-                    android:background="@drawable/pause_png"/>
-            </RelativeLayout>
-            <LinearLayout
-                android:layout_width="wrap_content"
+                android:background="@android:color/transparent"
+                android:visibility="gone"
+                android:src="@drawable/ic_pause_white_24dp"/>
+
+
+            <ImageButton
+                android:id="@+id/nextButtonNotif"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:layout_gravity="center">
-                <Button
-                    android:id="@+id/nextButtonNotif"
-                    android:layout_width="25dp"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/next_png"/>
-            </LinearLayout>
+                android:background="@android:color/transparent"
+                style="@style/Widget.Player.Button.Background"
+                android:src="@drawable/ic_next_white_24dp"/>
 
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
+
 </LinearLayout>

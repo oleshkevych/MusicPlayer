@@ -1,2 +1,6 @@
-<resources>>
+<resources>
+    <style name="Widget.Player.Button.Background" parent="Theme.AppCompat">
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
 </resources>
+

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.example.vov4ik.musicplayer"
+          xmlns:tools="http://schemas.android.com/tools"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -18,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".screens.main.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:excludeFromRecents="true"
             android:label="@string/app_name"
@@ -55,15 +56,21 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON"/>
             </intent-filter>
         </activity>
+
         <activity
-            android:name=".PlayerActivity"
+            android:name=".screens.player.PlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_player"
-            android:theme="@style/FullscreenTheme">
+            android:theme="@style/AppTheme.Fullscreen">
         </activity>
 
+        <activity android:name=".screens.tab.TabCheckerActivity"/>
+        <activity
+            android:name=".screens.search.SearchActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+
         <service
-            android:name=".PlayService"
+            android:name=".service.PlayService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.MEDIA_CONTENT_CONTROL">
@@ -73,37 +80,30 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </service>
-        <service android:name=".AutoAudioStopper"/>
+        <service android:name=".service.AutoAudioStopper"/>
 
-        <receiver android:name=".AlarmReceiver">
+        <receiver android:name=".receivers.AlarmReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".DisconnectingHeadphonesReceiver">
+        <receiver android:name=".receivers.DisconnectingHeadphonesReceiver">
             <intent-filter>
                 <action android:name="android.media.AUDIO_BECOMING_NOISY"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".HeadphonesClickReceiver">
+        <receiver android:name=".receivers.HeadphonesClickReceiver">
             <intent-filter android:priority="10">
                 <action android:name="android.intent.action.MEDIA_BUTTON"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".PhoneCallReceiver">
+        <receiver android:name=".receivers.PhoneCallReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE">
                 </action>
             </intent-filter>
         </receiver>
 
-        <activity android:name=".TabCheckerActivity">
-        </activity>
-        <activity
-            android:name=".SearchActivity"
-            android:label="@string/title_activity_search"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
     </application>
 
 </manifest>
